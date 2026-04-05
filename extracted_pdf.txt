@@ -1,0 +1,1406 @@
+Computers & Security 141 (2024) 103842
+Available online 5 April 2024
+0167-4048/© 2024 The Author(s). Published by Elsevier Ltd. This is an open access article under the CC BY-NC-ND license ( http://creativecommons.org/licenses/by-
+nc-nd/4.0/).
+Contentslistsavailableat ScienceDirect
+Computers & Security
+journal homepage: www.elsevier.com/locate/cose
+Explainability in AI-based behavioral malware detection systems
+AntonioGalli,  ValerioLaGatta,  VincenzoMoscato,  MarcoPostiglione,  GiancarloSperlì ∗
+Department of Electrical Engineering and Information Technology (DIETI), University of Naples “Federico II”, Via Claudio 21, Naples, Italy
+A R T I C L E I N F O A B S T R A C T
+Keywords:
+Behavioral malware detection
+EXplainable artiﬁcial intelligence
+Data-driven cyber security
+Long-short term memory
+Nowadays, our security and privacy are strongly threatened by malware programs which aim to steal our 
+conﬁdential data and make our systems out of service, among other things. While traditional signature-based 
+malware detection methods or statistical analysis have proven to be ineﬀective and time-consuming, recently 
+data-driven Artiﬁcial Intelligence(AI) techniques, i.e. Machine Learning (ML) and Deep Learning (DL) approaches, 
+have been successfully applied leveraging the behavior of malware in terms of API calls, and achieving 
+promising performances. However, their black-box behavior leads to a lack of explainability thus preventing 
+their application in real world scenarios. In light of this, eXplainable Artiﬁcial Intelligence (XAI) methodologies 
+and tools can be eﬀectively embedded within an AI-based malware detection process in order to make more 
+understandable the produced results. In this paper, we propose a XAI framework for behavioral malware 
+detection problems and evaluate the usefulness of four XAI methods (SHAP, LIME, LRP and Attention mechanism) 
+on three datasets with diﬀerent size, sequence length and number of classes, by which we could evaluate the 
+strengths and weaknesses – from eﬀectiveness and eﬃciency point of views – of recurrent deep architectures 
+(i.e. Long-Short Term Memory (LSTM) and Gated Recurrent Unit (GRU) models), and their applicability in the 
+modern Cyber Security(CS) scenarios.
+1. Introduction
+In the last decade, the number and variety of cyber attacks to In-
+formation Systems of organizations or single individuals has steadily 
+grown, mainly due to the diﬀusion of Internet of Things (IoT) devices 
+(Fei et al. (2023)) and Cloud Computing (Karn et al. (2021)).
+Cyber criminal attacks may have countless purposes, including the 
+insertion of advertising and purchase oﬀers in websites, the denial of 
+service of computing systems or the stealing of conﬁdential data for ﬁ-
+nancial gains. Generally, the attackers leverage malicious software (e.g. 
+trojan, backdoor, spyware, worm), also known as malware, to cause se-
+rious threats for the vulnerability of systems (Yan et al. (2023)).
+The detection of malware is an extremely challenging research task 
+because as Cyber Security (CS) researchers develop new techniques, 
+malware authors improve their ability to evade detection (Galloro et al. 
+(2022); Zhong et al. (2023)). From this perspective, the Cyber Threat 
+Intelligence (CTI) process aims to analyze and monitor the huge vol-
+umes of cyber security information (e.g. execution logs, traﬃc logs) to 
+enhance the security of organizations’ systems (Sun et al. (2023)).
+* Corresponding author.
+E-mail addresses:antonio.galli@unina.it(A.Galli),  valerio.lagatta@unina.it(V.LaGatta),  vincenzo.moscato@unina.it(V.Moscato),  marco.postiglione@unina.it
+(M.Postiglione),  giancarlo.sperli@unina.it(G.Sperlì).
+Traditional antivirus software programs cannot constitute an eﬀec-
+tive and timely solution to malware detection, since they are designed 
+to detect viruses by searching their signature within a database which 
+is updated from time to time (signature-based malware detection(Bazraf-
+shan et al. (2013))). Such approaches are easily escaped with advanced 
+evasion techniques, such as code obfuscation(Cheng et al. (2021)).
+From a more structured perspective, malware signatures can be 
+analyzed in a static or dynamic fashion: while Static Malware Detec-
+tion (SMD) approaches focus on the software’s byte-code, Behavioral 
+Malware Detection (BMD) analyses the behavior of the software at run-
+time, i.e. the sequence of Application Programming Interface (API) calls 
+which the software makes to the operating system (Alazab et al. (2010)) 
+(refer to Fig.1for an example). Speciﬁcally, API is a set of protocols and 
+functions to exchange data between diﬀerent devices and applications 
+(as shown in the example of Fig. 1), while a system call provides an 
+interface between the underlying operating system and the program. 
+Hereafter, we refer to API-calls and system calls as synonyms. The com-
+plex and subtle behavior of modern malwares makes SMD vulnerable 
+to several attacks (e.g. dynamic code linking and encryption)(Gaber  et 
+al. (2023)) and explains the increasing interest in designing (semi-)au-
+https://doi.org/10.1016/j.cose.2024.103842
+Received 13 October 2023; Received in revised form 22 March 2024; Accepted 2 April 2024
+Computers & Security 141 (2024) 103842
+2
+A.Galli,V.LaGatta,V.Moscatoetal.
+Fig. 1. Scores assigned to API calls of a ransomwaresequence. Red and blue to-
+kens have a positive and negative inﬂuence to the prediction, respectively. The 
+color intensity indicates the level of importance of the token. (For interpreta-
+tion of the colors in the ﬁgure(s), the reader is referred to the web version of 
+this article.)
+tomatic system to perform BMD. In this context, statistical approaches 
+(e.g. n-grams (Santos et al. (2009)), Hidden Markov Models (Imran et 
+al. (2015))) are often ineﬀective and time-consuming (Damodaran et al. 
+(2017)) and, consequently, Machine Learning (ML) and Deep Learning 
+(DL) are currently being adopted to advance the state-of-the-art detec-
+tion systems (Catak et al. (2020); Gopinath and Sethuraman (2023); 
+Gaber et al. (2023)).
+Despite their outstanding performance, these approaches usually 
+result in complex models that neither their designers are able to under-
+stand. While maintaining high levels of learning performance, it would 
+be good —  and sometimes mandatory —  to guarantee the explainability 
+of models, i.e. their ability to be understood and appropriately trusted 
+by humans (Ali et al. (2023)).
+Consequently, we are assisting to a more and more pervasive diﬀu-
+sion of eXplainable Artiﬁcial Intelligence(XAI) methodologies and tools, 
+even in the cyber-security domain (Zhang et al. (2022)). When con-
+sidering malware analysis, the explainability requirements have been 
+surveyed in the context of Android malware defense models (Liu et al. 
+(2022a); Fan et al. (2021); Wu et al. (2021); Liu et al. (2022b)) and 
+some explainable approaches have been proposed for SMD (Fan et al. 
+(2021); Liu et al. (2022b)).
+However, the explainabilityproblem  for BMD systems is still under-
+explored, especially when the detection model employs modern deep 
+sequential neural networks. In light of this, our analyses consider the se-
+quential behavior of a malware, which is diﬀerent from the traditional 
+static approach based on feature extraction as demonstrated in (Fan et 
+al. (2021); Wu et al. (2021); Liu et al. (2022b)). Additionally, while pre-
+vious work (Fan et al. (2021); Wu et al. (2021); Liu et al. (2022b)) only 
+focused on classifying Android applications as malware or not, our ap-
+proach provides a more comprehensive view by investigating a broader 
+range of systems. Concretely, XAI could support a variety of analyses 
+of malware’s behavior, e.g. by ranking its API calls according to how 
+important they were for the model to make its prediction. Eventually, 
+the explanation might help the analyst to understand the pivotal mal-
+ware operations along with the aﬀected resources. A simple example is 
+shown in Fig.1: the explanation suggests that the most relevant API con-
+sidered by the model to classify the software behavior as a ransomware
+is InternetOpenUrlA.
+In this paper, we present a XAI framework for BMD, aiming to eval-
+uate the eﬀectiveness, strengths, and weaknesses of four distinct XAI 
+methods. We compare explanations provided by Local Interpretable 
+Model-agnostic Explanations (LIME), SHapley Additive exPlanation 
+(SHAP), Layer-wise Relevance Propagation (LRP), and attention mech-
+anisms when explaining predictions from LSTM and GRU models. This 
+model processes API call sequences as input and outputs malware 
+class predictions. We quantitatively assess the similarity of explana-
+tions provided by diﬀerent techniques and validate the eﬀectiveness 
+of explanations by evaluating how predictions change when inﬂuen-
+tial features are retained or non-inﬂuential features are removed. Our 
+experiments span three publicly-available datasets with varying sizes, 
+sequence lengths, and class numbers, revealing the eﬃcacy of each 
+method under diverse experimental perspectives despite disagreements 
+between explanations.
+The paper is organized as follows: Section2discusses related work 
+on deep learning techniques applied to malware detection and some 
+preliminary works considering XAI in this domain. Section3contains a 
+comprehensive description of LSTMs and the explanation techniques 
+evaluated throughout this work, while a detailed description of our 
+framework is provided in section 4. Our experiments and results are 
+detailed in Section 5. Finally, Section6 reports conclusions and possi-
+ble future work.
+2. Related work
+The data-driven nature of the CTI process has determined an increas-
+ing interest in applying machine learning and deep learning approaches 
+to support its activities(Mills  et al. (2022); Sun et al. (2023)). In partic-
+ular, the detection of malware activities is becoming a challenging task 
+due to the explosive growth in the number of connected devices and the 
+evolution of attack strategies(Fei  et al. (2023)).
+In the last years, an increased number of works is focusing on BMD 
+due to the robustness of such approaches to several types of attacks (e.g. 
+code obfuscation, dynamic code linking and encryption) (Gaber et al. 
+(2023)). Common deep learning methods dealing with the dynamic na-
+ture of system calls are based on Convolutional Neural Network (CNN), 
+Recurrent Neural Networks (RNNs), LSTMs, and Graph Convolutional 
+Networks (GCNs)(Gopinath  and Sethuraman (2023)). Table1summa-
+rizes the state-of-the-art BMD approaches categorized by classiﬁcation 
+model.
+Despite having proven promising detection performance, the afore-
+mentioned methods could not be used in real scenarios due to the lack 
+of explainability caused by their complexity; as a matter of fact, the 
+complexity of AI models and their behaviors is often obscure to end 
+users having to make decisions based on AI-based predictions. Conse-
+quently, researches have now converged into the XAI ﬁeld, whose aim 
+is to produce intelligent agents able to provide explanations for their 
+decisions(Saeed  and Omlin (2023); Ali et al. (2023)). In particular, the 
+term explainability refers to the ability to explain or to visualize an AI 
+model’s decision in understandable terms to humans (e.g. Rong et al. 
+(2023)).
+Various works investigate the explainability issue in malware detec-
+tion: (Melis et al. (2018)) propose a gradient-based approach to identify 
+the most inﬂuential features in the detection process;(Han  et al. (2019)) 
+investigate the correlation between static and dynamic features that 
+aﬀect prediction performance about diﬀerent malware families. Fur-
+thermore, (Warnecke et al. (2020)) evaluate six explanation methods 
+aiming to unveil the main features in deep learning models for malware 
+detection.
+However, to the best of our knowledge, the explainability problem 
+has not been investigated yet in the BMD domain. In fact, our analyses 
+on explanation methods consider the sequential behavior of a malware, 
+which is diﬀerent from the classical static approach based on feature 
+extraction as demonstrated in (Fan et al. (2021); Wu et al. (2021); 
+Liu et al. (2022b)). Additionally, while current literature (Fan et al. 
+(2021); Wu et al. (2021); Liu et al. (2022b)) mainly focuses on Android 
+malware, our approach provides a more comprehensive view. In this 
+paper, we explore the application of a comprehensive set of explana-
+tion techniques on top of LSTM-based deep learning models because of 
+their wide use and high performance on several datasets and contexts 
+(Jahromi et al. (2020)), also conﬁrmed by our experimental analysis. 
+In particular, we compared the explanations provided by four diﬀer-
+ent state-of-the-art XAI methods, relying on feature importance, with 
+three diﬀerent datasets varying in size, sequence length and number of 
+classes.
+Computers & Security 141 (2024) 103842
+3
+A.Galli,V.LaGatta,V.Moscatoetal.
+Table 1
+State-of-the-art approaches for behavioral malware classiﬁcation.
+Model Paper Approach
+RNN Jhaetal.( 2020)
+Theanalysisreliesonthreefeaturevectors(one-hotencoding,
+randomandWord2Vec),underlyingtherelevanceofinputsize
+parameterforthemodel.
+Marquesetal.( 2021) ItprovidesananalysisabouttheapplicationofRNNmodels
+formalwaredetection.
+CNN JeonandMoon( 2020) Itinvestigatesopcodesequencesbycombiningstaticand
+dynamiclow-levelfeatures.
+Yadavetal.( 2022) ACNN-basedmodelisproposedtodetectAndroidmalwareusing
+image-basedmalwarerepresentationsoftheAndroidDEXﬁle.
+GCN Peietal.( 2020) AMalNetreliesonGCNsforlearningsemantic
+andsequentialpatterns.
+deOliveiraandSassi( 2023)
+Itperformsadynamicmalwareanalysisusingadirectedcyclic
+graphoftheAPIcallsequences,leveragingbothtemporaland
+spatialinformation.
+LSTM
+Jahromietal.( 2020)
+Itaimstodealswithmalwaredetectionproblemby
+combiningglobalandshortdependenciesofinputandusing
+aregularizationmethodforspeedupmethodconvergence.
+Cataketal.( 2020)
+LSTMmodelisusedforclassifyingmalwarein8families
+basedonsequentialdataextractedfromAPIcallsmade
+onWindowsoperatingsystems.
+Lietal.( 2022a)
+ABI-LSTMmodelhasbeendesignedtoextractAPI
+relationshipinformationgeneratedthroughanembedding
+andconvolutionallayers.
+Ensemble
+Chakrabortyetal.( 2020) Itcombinesclusteringandclassiﬁcationtasks
+foridentifyingmalwarefamilies.
+Bhatetal.( 2023) Ensembleofmachinelearningmodelshasbeendesignedtoclassify
+Androidmalwarebasedonsystemcalls,bindersandAndroidobjects.
+Demirkıranetal.( 2022) Ensembleofdeeplearningmodelshasbeenproposedfor
+multiclassmalwaredetectionbasedonsystemcalls.
+3. Theoretical background
+In this section we introduce some basic notions, which our work 
+relies on. In particular, we ﬁrstly describe LSTMs —  the deep learning 
+technique at the core of our malware classiﬁers —  and we successively 
+focus on the explanation techniques analyzed throughout this paper.
+3.1. Recurrent neural networks
+As mentioned in the previous sections, behavioral malware detec-
+tion deals with API calls resulting from the execution of malware and 
+goodware instances in sand-boxed environments. The sequential nature 
+of these data makes RNNs and LSTMs particularly suitable to perform 
+the detection task. The general idea behind these models is to introduce 
+a dependence mechanism between consecutive time-steps, e.g. a mali-
+cious behavior is never determined by an API call in isolation, but by 
+the sequence in which it takes place.
+Speciﬁcally, LSTMs (Hochreiter and Schmidhuber (1997)) are an 
+evolution of RNNs designed to learn long-term dependencies. Speciﬁ-
+cally, each time step 𝑡, i.e. each API call in the sequence, is processed 
+through a memory cell 𝐶𝑡which store the information to remember in 
+the successive time-steps. 𝐶𝑡’s values are controlled with three gates: 
+forget 𝑓𝑡, input 𝑖𝑡and output 𝑜𝑡gates. In turn, 𝑓𝑡and 𝑖𝑡control 𝐶𝑡to 
+decide what information should actually be thrown away and added, 
+respectively. Finally, 𝑜𝑡ﬁlters which part of 𝐶𝑡should be passed to 
+the next time-step. For instance, consider the API (sub-)sequence Nt-
+TerminateProcess → NtOpenFile → NtWriteFile and assume the current 
+time-step is the second API call (𝑡 =2). Under this settings, 𝑓2 could de-
+cide to forget the previous one if it terminates a not-related process, 𝑖2
+might choose to store the target ﬁle information and 𝑜2 could decide 
+to output only the ﬁle privileges which is important to understand the 
+legitimacy of the successive writing operation.
+Based on the above-mentioned concepts, some LSTM variants, such 
+as Bidirectional-LSTM (BiLSTM), Gated Recurrent Unit (GRU), have 
+been proposed (Li et al. (2022b)). In particular, BiLSTM is a sequence 
+processing model that consists of two LSTMs one taking the input in a 
+forward direction and the other in a backwards direction, while GRU 
+has only two gates that are reset and update making it less complex 
+than LSTM in terms of parameters.
+3.2. Explanation methods
+Since our work is the ﬁrst one focusing on XAI for behavioral mal-
+ware detection, we decide to investigate strengths and weaknesses of 
+the most famous state-of-the-art XAI techniques. Since there is no agree-
+ment on the best techniques, nor a standard for the explanation genera-
+tion, we explore the whole XAI spectrum to assess whether in behavioral 
+malware detection domain some techniques could be preferred to the 
+others.
+Concretely, we analyze explanations provided by LIME (Ribeiro et 
+al. (2016)), SHAP (Lundberg and Lee (2017)), LRP (Bach et al. (2015)) 
+and attention mechanism (Bahdanau et al. (2015)) on LSTM-based clas-
+siﬁcation models. The ﬁrst two methods are post-hoc, i.e. they are 
+applied after the model is built and trained, and model-agnostic, i.e. 
+they look at 𝑓as it were a black-box, considering only its inputs and 
+outputs. Practically, they can be useful when explaining a third-party 
+model (such as those provided on Microsoft and Amazon clouds), only 
+accessible on-demand. On the other hand, LRP, despite being a post-hoc 
+technique, is a white-box technique since it requires the access to 𝑓’s in-
+ner structure. Concretely, it is suitable in debugging scenarios where the 
+domain expert could assess what the model is learning. Finally, the at-
+tention mechanism requires changing 𝑓’s structure and thus re-training 
+the whole system. An overview of the techniques is shown in Fig.2.
+The XAI methods studied in this work represent a diverse range of 
+techniques. LIME focuses on local model explainability through perturb-
+Computers & Security 141 (2024) 103842
+4
+A.Galli,V.LaGatta,V.Moscatoetal.
+Fig. 2. Overview of the analyzed explanation techniques. Cyan boxes represent the scope of the model while red ones represent the scope of the explainer. LIME 
+and SHAP (a) look at the model if it were a black-box, LRP (b) has access to the structure of the model while the attention mechanism (c) requires a new layer to be 
+added to such structure.
+ing input data, SHAP provides a game-theoretic approach to allocate 
+contributions to each feature, LRP propagates relevance through neu-
+ral network layers, and Attention mechanisms highlight input features 
+attended to by the model. This diversity allows for a comprehensive 
+exploration of diﬀerent explainability approaches. Furthermore, the se-
+lected methods (LIME, SHAP, LRP, Attention) are particularly relevant 
+when dealing with recurrent neural networks that are commonly used 
+for behavioral malware detection. LIME and SHAP oﬀer model-agnostic 
+explainability, making them applicable to a wide range of models, in-
+cluding neural networks. LRP speciﬁcally addresses neural network 
+layer-wise relevance, and Attention mechanisms are commonly used 
+in neural networks for sequence data. LIME and SHAP have gained 
+widespread adoption in the research community due to their versa-
+tility and eﬀectiveness in explaining complex models. LRP is known 
+for its application in neural networks, and Attention mechanisms have 
+become standard in natural language processing and computer vision 
+tasks. Choosing well-established methods enhances comparability with 
+existing literature. Finally, all the experimented methods have readily 
+available implementations and are user-friendly, making them suitable 
+for application in real scenarios
+It is worth to note that all the analyzed techniques provide explana-
+tions in the form of feature-importance, i.e. they assign a score to each 
+API call in the sequence, indicating how it contributes to 𝑓’s prediction 
+(see the ransomwareexample in Fig.1). Not only do feature-importance 
+explanations are easily interpretable by end-users, but also they pro-
+vide an eﬀective summary, extracting just the small and typically not 
+consecutive sub-sequences which determine the malware capability to 
+harm the system. In the remainder of this section, we provide some 
+details of the above-mentioned explanation methods.
+3.2.1. Local interpretable model-agnostic explanations
+LIME (Ribeiro et al. (2016)) creates a simpliﬁed and locally-
+interpretable surrogate model which approximates the complex behav-
+ior of the black-box model. It is based on the assumption that no matter 
+how the decision function is complex, it can be approximated by a lin-
+ear model in the neighborhood of the instance being the explanation 
+target.
+Formally, given an instance 𝑆, i.e. the API call sequence, its neigh-
+borhood 𝜋𝑆, generated by perturbing 𝑆elements, and the black-box 
+model 𝑓, LIME ﬁnds an explainable model 𝑔(e.g. linear model) by 
+minimizing the following objective function:
+𝜉(𝑆)=argmin
+𝑔∈𝐺
+(𝑓,𝑔,𝜋𝑆)+Ω(𝑔), (1)
+(𝑓, 𝑔, 𝜋𝑆)being the unfaithfulness of 𝑔with respect to 𝑓and Ω(𝑔)
+being 𝑔’s complexity. It is worth to note that, being a model-agnostic 
+technique, LIME does not depend on 𝑓(e.g. LSTM, RNN, CNN) and it 
+can be seamlessly applied to our LSTM-based model.
+LIME’s Achilles heel is the random generation of neighborhoods, 
+which causes explanations of two very close instances to vary greatly 
+(Alvarez-Melis and Jaakkola (2018)) and does not consider density 
+of black-box outcomes in the neighborhood instances (Guidotti et al. 
+(2018)). Despite this, LIME’s explanations have been applied in various 
+domains including text and/or sequence classiﬁcation (Ribeiro et al. 
+(2016); Kiefer (2022)) and cryptomining detection Karn et al. (2021), 
+even considering LSTM models. Interestingly, (Liu et al. (2022b)) shows 
+the promising performance of LIME explanations in the context of SMD.
+3.2.2. Shapley additive exPlanations
+SHAP (Lundberg and Lee (2017)) approximates the computation of 
+Shapley values, a statistical method from coalition game theory (Shap-
+ley et al. (1988)), applied in diﬀerent application domains (i.e., text 
+classiﬁcation (Kokalj et al. (2021)) and cryptomining detection (Karn 
+et al. (2021))). At high level, features, i.e. the API calls in a sequence, 
+are considered as “players” which cooperate in coalitions to obtain a 
+proﬁt and the prediction of the black-box model 𝑓provides the “pay-
+out” which has to be distributed among players. Shapley values are the 
+marginal contribution of feature values across all possible coalitions. In 
+other words, the i-th Shapley value represents the contribution of the 
+i-th API call in the sequence for the prediction.
+Speciﬁcally, three methods are proposed: (i) kernelSHAP is the 
+model-agnostic version of the algorithm working only with inputs and 
+outputs of 𝑓, (ii) treeSHAPcomputes the Shapley values assuming 𝑓is 
+a tree-based classiﬁcation model, (iii) deepSHAP optimizes the compu-
+tation for neural network architectures.
+3.2.3. Layer-wise relevance propagation
+Initially designed to explain feed-forward neural networks (Bach et 
+al. (2015)), LRP has been successively extended to CNN for image clas-
+siﬁcation (Oksuz et al. (2022)) and LSTM for text classiﬁcation (Arras 
+et al. (2017)) and next activity prediction (Aversano et al. (2023)).
+Its theoretical foundation is the “relevance conservation principle”, 
+according to which the total relevance sum of hidden neurons is the 
+Computers & Security 141 (2024) 103842
+5
+A.Galli,V.LaGatta,V.Moscatoetal.
+Fig. 3. Methodological workﬂow. The pre-processing step aims to standardize the data format. The model classiﬁes the input sequence as malware/goodware, and 
+the explainer generates the explanation. The models are then evaluated in terms of classiﬁcation performance, eﬃciency and explanations quality.
+same within each layer 𝑙of the network. As a result, given the (probabil-
+ity) output of the black-box model 𝑓(𝑆), 𝑆being the API calls sequence, 
+the basic idea is to back-propagate the output such that ∑
+𝑗𝑅(𝑙)
+𝑗 =𝑓(𝑆)
+for each layer 𝑙, 𝑅(𝑙)
+𝑗 being the relevance of the 𝑗-th neuron in the 𝑙-th 
+layer. Eventually, 𝑅(1)
+𝑗
+will be the importance of 𝑗-th API call in the 
+sequence, thus representing its contribution to the prediction.
+LRP has been successively extended to deal with recurrent neural 
+network architectures such as LSTMs (Arras et al. (2017)) by deﬁning 
+the redistribution rules dealing with the two types of neural connections 
+involved by such networks: (1) many-to-one weighted linear correlations
+and (2) two-to-one multiplicative interactions, which are described as fol-
+lows.
+Weighted Correlations.The relevance 𝑅𝑖at the neuron 𝑧𝑖is computed by 
+summing up all the messages 𝑅𝑖←𝑗coming from upper-layer neurons 
+𝑧𝑗= ∑
+𝑖𝑧𝑖⋅𝑤𝑖𝑗+𝑏𝑗.
+Multiplicative Interactions.In multiplicative interactions, the value of the 
+upper-layer neuron is computed as 𝑧𝑗= 𝑧𝑔⋅𝑧𝑠, where 𝑧𝑔and 𝑧𝑠are 
+lower-layer neurons. When such kind of interaction appears in LSTMs, 
+one of the two lower-layer neurons 𝑧𝑔is always a gate, whose values are 
+in the range [0, 1]. The relevance is redistributed by setting 𝑅𝑔=0 and 
+𝑅𝑠=𝑅𝑗because the aim of the gate neuron is to decide how much of 
+the information contained in 𝑧𝑠has to be keeped to make the decision in 
+the forward pass, thus controlling the relevance which will be assigned 
+to 𝑧𝑗by upper-layer neurons.
+Diﬀerently from LIME and SHAP, LRP requires the access to the 
+structure of the neural network, since it has to perform a backward pass 
+through the network to compute the relevance scores.
+3.2.4. Attention layer
+Initially designed in the context of Machine TranslationBahdanau  et 
+al. (2015), the attention mechanismhas been applied in many diﬀerent 
+domains, from document classiﬁcationYang  et al. (2016)to  scene seg-
+mentationChen  et al. (2023)to  medical diagnosisBarata  et al. (2021). 
+In the context of text classiﬁcation, its aim is to select the most relevant 
+parts of context information to facilitate learning, assigning a score to 
+each token of the sequence. Formally, we adopt the soft attention mech-
+anism proposed inYang  et al. (2016).
+It is worth to note that more powerful attention mechanisms, i.e. 
+self-attention and multi-head attention Vaswani et al. (2017), have been 
+recently proposed in NLP literature to learn meaningful representations 
+even in unsupervised settings. We will compare these approaches in the 
+experimental section.
+However, according to the XAI taxonomy, the attention mechanism 
+is not a post-hoc method, i.e. it requires the model to be built with an 
+attention layer and hence trained on available training data.
+Concretely, the attention scores reﬂect the relevance of each token 
+for the prediction, thus being comparable with scores provided by the 
+others feature importance-based techniques. However, it is worth to 
+note that the contextual representation of the LSTM does not guaran-
+tee similar context vectors for similar sequences Du et al. (2019), thus 
+representing a bias with respect to the other XAI post-hoc methods.
+4. Method
+4.1. Problem formulation
+As mentioned above, behavioral malware detection analyzes the 
+sequence of system calls (i.e. APIs) a malware/goodware invokes to ac-
+cess to the operating system’s services. Formally, let  ={𝐴𝑃𝐼𝑖}𝑖=1,⋯ ,𝑉
+be the set of API names the operating system oﬀers, then the 
+malware/goodware can be described through the sequence 𝑆𝑖=
+{𝑠1, 𝑠2, ⋯  , 𝑠𝑚𝑖}, 𝑠𝑖∈, 𝑚𝑖being 𝑆𝑖length. It is worth to note that the 
+same API can be invoked a lot of times (even consequently) in the same 
+sequence and diﬀerent sequences might have diﬀerent lengths.
+Given the sequence 𝑆𝑖, the classiﬁcation task aims to learn a model 
+𝑓∶𝑆𝑖→ ,  ∈𝑅𝑘, 𝑘being the number of classes. This formulation, 
+besides describing the classical binary setting of “malware vs goodware” 
+problem, can be adopted for malware family (e.g. Trojan, Worm, Ran-
+somware, etc.) classiﬁcation as well.
+Furthermore, we consider the problem of generating local feature-
+importance explanations for each sequence. In other words, the expla-
+nation task aims to score each API in the sequence according to how 
+much it has contributed to the model’s prediction. Thus, the explainer 
+can be formalized as follows:
+∶(𝑓,𝑆𝑖) →𝐸𝑖,
+𝐸𝑖∈𝑅𝑚𝑖being the vector such that 𝑒𝑗∈ℝ represents the score of 
+the j-th API in the sequence; the higher the score, the higher that API 
+contributed to the model result. It is worth to note that the explainer 
+module is not necessary diﬀerent from the classiﬁcation model itself: 
+for instance, if 𝑓is transparent, the explanation step boils down to post-
+processing operations of the model results. Furthermore, negative scores 
+imply that the corresponding system calls may have led the model to-
+wards another prediction w.r.t. the actual one.
+4.2. Our framework
+Our methodology builds upon a pipeline composed by three steps: 
+the sequence pre-processingmodule aims to standardize the data format, 
+the model is a classiﬁcation learner which exploits the sequence struc-
+ture of input data to perform the classiﬁcation and the explainer gen-
+erates the explanation supporting the model’s prediction. Our method-
+ological workﬂow is summarized in Fig.3.
+4.2.1. Sequence pre-processing
+The original sequences collected from the sandbox execution suﬀer 
+from diﬀerent problems concerning indeﬁnite sequence length, over-
+lapping subsequences and blurred boundary of sequence from malware 
+and benign software. We propose to perform the following operations:
+•D e c r e a s e redundancy in the sequences by keeping only the ﬁrst 
+API call in a sub-sequence of identical calls in order to capture 
+malware behavioral diﬀerences more clearly in sequence order. 
+For instance, a malware attack could hide its core malicious sub-
+Computers & Security 141 (2024) 103842
+6
+A.Galli,V.LaGatta,V.Moscatoetal.
+sequence operations by interleaving repeatedly useless API calls 
+(e.g. SizeOfResourse, FindResource) with the threatening ones.
+•F i x the sequence length by padding (head-truncating) the ones 
+shorter (longer) than a threshold 𝑚. This operation is needed be-
+cause sequential deep learning models (e.g. GRUs,LSTMs) take in-
+puts of the same length and dimension during the training process 
+(Dwarampudi and Reddy (2019)).
+4.2.2. Model architecture
+We consider classiﬁcation models which should be able to process 
+sequence data so as to extract knowledge from the API calls performed 
+by malware/goodware. Speciﬁcally, we propose to use an LSTM- and 
+GRU-based architectures, as depicted in Fig. 3. Given the ﬁxed-length 
+sequence 𝑆∈𝑅1×𝑚, the embedding layer maps each input API 𝑠𝑖to 
+a numeric vector 𝑥𝑖∈𝑅𝑑, 𝑑being the embedding dimensionality. The 
+LSTM/GRU layer transforms the (embedded) input sequence 𝑋𝑖∈𝑅𝑚×𝑑
+to a vector 𝑋′
+𝑖∈𝑅𝑚×𝑑′
+, 𝑑′being the number of LSTM/GRU units. Fi-
+nally, the dense and softmax layers produce the vector 𝑦 ∈𝑅𝑘, whose 
+j-th element represents the probability that the input sequence belongs 
+to the j-th class.
+4.2.3. Explainer
+The explainer module works with the model and the instance to 
+explain (i.e. target instance) in order to extract the explanation 𝐸as 
+deﬁned in the previous section. Depending on the explainer typology, 
+there would be some considerations to be made: (1) model-speciﬁc 
+techniques (Attention mechanism and LRP) force to use the classiﬁ-
+cation model they are designed for, (2) white-box approaches (LRP) 
+require the access to the internal states of the model, (3) model-agnostic 
+methods (LIME, SHAP) do not rely on the classiﬁcation model but may 
+still require the dataset used for the training procedure. Consequently, 
+diﬀerent techniques may lead to dissimilar (even inconsistent) explana-
+tions since they make diﬀerent assumptions and use diverse artifacts of 
+the training stage.
+5. Experimental evaluation
+This section discusses the obtained results according to the experi-
+mental protocol, aiming to evaluate the proposed framework in terms 
+of running time and eﬃcacy with both quantitative and qualitative 
+measures. In addition, we released our code in a github repository1
+to guarantee its replicability.
+5.1. Experimental protocol
+We evaluated both the eﬃciency and the eﬀectiveness of the expla-
+nation methods described in Section3.
+Since the growing interest in applying of XAI methodologies for dif-
+ferent application domains (e.g., propaganda detection (Cavaliere et al. 
+(2023))), we focused our analysis from diﬀerent points of view.
+In particular, on the one hand, we compared the run timerequired to 
+provide explanations (Section5.3), on the other hand, the eﬀectiveness 
+of the diﬀerent techniques has been assessed on both qualitative and 
+quantitativepoints of view:
+•w e checked the extent to which explanations provided by diﬀerent 
+explainers are similar between each other by means of a compati-
+bilityexperiment (Section5.4.1);
+•t h e Sentence-Level Representation approach proposed by (Arras et 
+al. (2019)) has been applied to investigate whether it is possible to 
+retrieve structured API call sequence representations through the 
+scores provided by the analyzed techniques (Section5.4.2);
+1 To encourage reproducibility of our results, all code and datasets 
+is publicly available on Github (https://github .com /Anthonys94 /
+behavioralMalwareDetection).
+•a perturbation experiment, inspired by (Arras et al. (2019)), has 
+been performed to evaluate how predictions of the model change 
+when deleting the mostly-inﬂuential tokens or keeping only them 
+(Section5.4.3);
+•w e compared XAI techniques based on their ability to provide 
+deterministic explanations through a stability experiment (Sec-
+tion5.4.4);
+•a case study has been discussed to provide more insight about how 
+XAI techniques can support the understanding of malware behavior 
+(Section5.5).
+Our experiments have been performed on Google Colab2 equipped 
+with one single core hyper threaded Xeon Processor @2.2Ghz, 12 GB of 
+RAM and a Tesla T4 GPU.
+It is important to note that while the experiments on LIME, LRP and 
+Attention have been executed with the Tensorﬂow version 2.3.0, we 
+were obliged to a downgrade (to version 1.15.2) to run SHAP experi-
+ments due to compatibility issues.
+5.1.1. Datasets
+We ran our experiments on three datasets with diﬀerent size, se-
+quence length and number of classes. In particular, we have selected 
+Mal-API-20193 (Catak et al. (2020)), API Call Sequences4 (de Oliveira 
+and Sassi (2023)) and Alibaba Cloud Malware5 (Alibaba Cloud (2018)) 
+datasets, whose characteristics are summarized as follows.
+Mal-API-2019 is a multiclass problem characterized by eight main 
+malware families: Trojan, Backdoor, Downloader, Worms, Spyware Ad-
+ware, Dropper, Virus. The dataset has been generated by searching the 
+malwares’ MD5 hash values on Github and, successively, using Virus-
+Total API in order to obtain the families of these malicious software.
+Eventually, the API set cardinality ||is 342, distributed among 
+7,107 sequences classiﬁed in the above-mentioned families.
+API Call Sequences dataset contains 42,797 malware API call se-
+quences and 1,079 goodware API call sequences, each one composed 
+by the ﬁrst 100 non-repeated consecutive API calls associated with the 
+parent process, extracted from the ‘calls’ elements of Cuckoo Sandbox 
+reports.6 In this case, the set of API  is formed by 307 unique API 
+calls.
+Alibaba Cloud Malwareis a multiclass problem. It consists in API in-
+struction sequences from the windows executable program ﬁles in the 
+sandbox simulation. More in details, || =298 and the dataset contains 
+a total of 600 millions of record, which are grouped into the follow-
+ing classes: Normal, Ransom, miner, DDoS, Worm, Virus, Backdoor and 
+Trojan.
+Table 2 reports sequence length distributions in terms of synthetic 
+measures (mean, median, min and max) of each dataset before and after 
+the removal of redundancies.
+5.1.2. Models & explainers
+The baseline classiﬁcation model has been implemented in Tensor-
+ﬂow 2.07 using the corresponding Keras layers. Table 3 reports the 
+hyper-parameters conﬁgurations selected for each dataset. As intro-
+duced in Section4.1, the trained predictors represent the complex and 
+non-explainable models 𝑓which are, then, analyzed by the explainers 
+𝑒, whose conﬁgurations will be described in the following.
+LIME8 has been conﬁgured so as to retrieve a score for each element 
+of the sequence to explain (i.e. NUM_FEATURES=Sequencelength).  Be-
+2 https://colab .research .google .com/.
+3 https://github .com /ocatak /malware _api _class.
+4 https://ieee -dataport .org /open -access /malware -analysis -datasets -api -call -
+sequences.
+5 https://tianchi .aliyun .com /competition /entrance /231694 /introduction.
+6 https://cuckoosandbox .org.
+7 tensorﬂow2015 -whitepaper.
+8 https://github .com /marcotcr /lime.
+Computers & Security 141 (2024) 103842
+7
+A.Galli,V.LaGatta,V.Moscatoetal.
+Table 2
+Sequence length distributions before and after the re-
+moval of redundancies.
+Dataset Mean Median Min Max
+Mal-Api-2019 19647 633 10 1764421
+→ 19647 633 10 1764421
+APICallSequences 100 100 100 100
+→ 100 100 100 100
+Alibaba 6716 1796 3 888206
+→ 3056 669 3 511789
+Table 3
+Hyper-parameters choices.
+Hyper-parameter Mal-API-2019 APICallSequences Alibaba
+Sequencelength 128 100 669
+Embeddingsize 32 8 64
+LSTMunits 16 128 128
+sides, we follow the author’s suggestion to generate 5000 neighbors to 
+capture the locality of the explanation. Since the developed model is a 
+deep neural network, we adopt DeepSHAP9 to perform SHAP experi-
+ments.
+LRP has been applied to our LSTM-based model by adapting the 
+implementation10 provided by (Arras et al. (2017)). We set the hyper-
+parameters to 𝜖=0 .001, 𝛿=0 .0 based on the suggestions reported by 
+the authors.
+Finally, two versions of the attention layer have been compared, 
+namely the soft attention mechanism presented in(Yang  et al. (2016)) 
+and the more recent multi-head attention proposed in Vaswani et al. 
+(2017). The model architecture has been retrained positioning the at-
+tention layer right after the LSTM one, considering two heads for the 
+multi-head attention layer.
+5.2. Classiﬁcation results
+Datasets have been split in training (60%), validation (20%) and test 
+sets (20%) in a stratiﬁed manner in order to perform the training and 
+performance evaluation. For our evaluations, we used the most com-
+mon metrics for classiﬁcation tasks Pendleton et al. (2016): i) Accuracy, 
+which is the correct predictions ratio; ii) Precision, which measures the 
+proportion of truly malicious API calls among all the detected samples; 
+iii) Recall, which quantiﬁes the number of detected malicious API calls 
+among all of them, quantifying the false negative rate; iv) 𝐹1 score, 
+which measures the overall eﬀectiveness by combining precision and 
+recall.
+Table 4 reports the performance for each dataset and model we 
+tested (refer to the Appendix for detailed metrics for each class). The 
+(MultiHead) attention performance refers to a diﬀerent model, trained 
+with the (multi-head) attention layer after the LSTM.
+Speciﬁcally, the LSTM achieves better results, in terms of 𝐹1score, 
+than GRU and BiLSTM on two out of three datasets. Consequently, we 
+chose this model as the one to be explained by post-hoc XAI techniques, 
+i.e. LIME, SHAP and LRP.
+Interestingly, the standard soft attention mechanism does not im-
+prove too much the classiﬁcation performance, except for the Mal-API-
+2019dataset where we gain up to 6 points over the LSTM base model. 
+In addition, multi-head attention seems not beneﬁcent since it always 
+leads to worse metrics. This situation can be also found in (Wiegreﬀe 
+and Pinter (2019)), where the authors deemed the datasets unsuitable 
+test cases to evaluate explanations, claiming that “attention is not ex-
+9 https://github .com /slundberg /shap.
+10 https://github .com /ArrasL /LRP _for _LSTM.
+planation if you don’t need it”. However, we decided to keep the soft 
+attention mechanism for the explanation-related experiments so as to 
+empirically validate its suitability in this domain. Finally, it is worth 
+to note that we did not observe signiﬁcant performance diﬀerences 
+when increasing the sequence length parameter over the median for 
+each dataset (see Table3), meaning that the truncation pre-processing 
+strategy does not lose malicious API (sub-)sequences.
+5.3. Eﬃciency analysis
+When performing malware detection, analysts should understand 
+what is happening in the system as soon as possible, before the mal-
+ware makes more damages or spreads across the network. From this 
+perspective, the explanation could speed up the process if its genera-
+tion is time eﬃcient; in other words, even if the explanation could help 
+the analysts in understanding what has happened, it is useless if its gen-
+eration requires too much time.
+To this end, we evaluate the running times of the analyzed explain-
+ers for each dataset. It is worth to note that for post-hoc techniques 
+(LRP, LIME and SHAP) the explanation time must be added to the pre-
+diction one.
+Table 5 reports the mean run times and the 95% conﬁdence inter-
+vals computed considering the instances of the testing sets for each 
+dataset (1, 500 samples for Alibaba, 1, 422 samples for Mal-API-2019 
+and 8, 776 samples for API Call Sequences, respectively). Not surpris-
+ingly, LRP achieves by far the best results across all datasets, 0.12, 0.17 
+and 0.99 seconds respectively. The reason behind this performance is 
+explained by the fact that it just requires a single back-propagation step 
+along the network model, in contrast to other explainers which require 
+ﬁtting either a statistical model (SHAP) or a transparent machine learn-
+ing algorithm (LIME). In any case, the running times on the Alibaba 
+dataset (0.99 seconds) are quite worse because of the longer input API 
+sequences.
+The Attention running times are not reported since attention mech-
+anism is included into the network, so the explanations are computed 
+simultaneously with the prediction. Interestingly, SHAP performance 
+strongly depends on the instances on which the explainer is built. To 
+perform the experiment, we set the maximum number of training sam-
+ples that our machine could handle.
+5.4. Eﬀectiveness analysis
+5.4.1. Compatibility
+The experimented explanation methods rely on diﬀerent assump-
+tions depending on what they “know” about the model and/or the data 
+it is trained on. Thus, we ﬁrst assess the compatibility degree between 
+diﬀerent explanations: speciﬁcally, we compared the set 𝑇𝑖of the 𝑘fea-
+tures with the highest relevance from method 𝑖with the set 𝑇𝑗of the 
+𝑘features with the highest relevance from method 𝑗, for each method 
+𝑖, 𝑗. Formally,
+𝐼𝑆(𝑇𝑖,𝑇𝑗)=
+|𝑇𝑖∩𝑇𝑗|
+𝑘 , (2)
+𝑖, 𝑗being the four techniques we analyzed. We set 𝑘as the 10% of 
+the sequence length. Fig. 4 shows that there is little agreement, lower 
+than 50%, between diﬀerent techniques, especially on GRU explana-
+tions. Thus, this highlights the need of a comprehensive comparison to 
+understand which are the best explanations and in which situations.
+5.4.2. Sequence-level representations
+A qualitative analysis has been conducted in order to explore if 
+the word relevance can be leveraged to build sequence-level repre-
+sentations that present some regularities. The motivation behind this 
+approach is to investigate whether the relevance of words can be har-
+nessed to enhance the explainability of sequence-level representations. 
+Computers & Security 141 (2024) 103842
+8
+A.Galli,V.LaGatta,V.Moscatoetal.
+Table 4
+Classiﬁcation results for each dataset and model. The two attention-based models 
+are built considering the respective attention layer after the LSTM one.
+Dataset Model Accuracy Precision Recall F1
+Mal-API-2019
+LSTM 47.53 49.62 47.82 48.47
+BiLSTM 52.88 54.89 53.99 54.31
+GRU 47.69 49.10 48.62 48.27
+Attention 52.18 53.92 53.32 53.40
+MultiHeadAttention 47.69 49.10 48.62 48.27
+APICallSequences
+LSTM 99.43 95.69 91.81 93.79
+BiLSTM 98.91 93.86 81.86 86.85
+GRU 98.91 91.62 84.30 87.49
+Attention 99.32 94.59 91.08 92.71
+MultiHeadAttention 98.99 92.87 84.92 88.38
+Alibaba
+LSTM 83.69 66.60 67.54 67.05
+BiLSTM 82.90 67.21 62.88 63.55
+GRU 84.09 72.02 65.20 65.81
+Attention 85.71 69.51 67.78 68.32
+MultiHeadAttention 84.72 67.23 66.85 66.47
+Fig. 4. Compatibilitybetweendiﬀerentexplanationtechniques.
+Table 5
+Explanation Run times (s) over the three datasets.
+Method Mal-API-2019 APICallSequences Alibaba
+LIME 0.71±0 .001 0 .59±0 .0005 2 .52±0 .002
+SHAP 0.28±0 .002 1 .59±0 .0005 2 .23±0 .006
+LRP 𝟎.𝟏𝟐± 𝟎.𝟎𝟎𝟐 𝟎 .𝟏𝟕± 𝟎.𝟎𝟎𝟎𝟏 𝟎 .𝟗𝟗± 𝟎.𝟎𝟎𝟏
+Attention — — —
+By visualizing these representations in a 2D space, we aim to gain in-
+sights into the separability of diﬀerent classes and the eﬀectiveness of 
+diﬀerent explanation methods.
+Speciﬁcally, the word embeddings are obtained from the output of 
+the Embedding layer in our model. The construction process involves 
+a linear combination of these word embeddings. The weighting factor 
+for each word embedding in this combination is its corresponding im-
+portance score, as provided by the explanation method. This approach 
+is based on the hypothesis that relevant words contribute more signif-
+icantly to the overall context of the sequence. For each explanation 
+method, we select the variant that yielded the best performance in our 
+previous experiments. We also include results from a baseline method, 
+which involves simple averaging of word embeddings without consid-
+ering word relevance.
+The sequence-level representations are then projected onto a 2D 
+space using Principal Component Analysis (PCA). This step is performed 
+to visualize the distribution and separation of sequences in a lower-
+dimensional space. The PCA is applied after whitening the data to 
+ensure each principal component has a unit variance.
+The resulting 2D projections for the test set sequences are depicted 
+in Fig. 5 and Fig. 6 for the LSTM and GRU models, respectively. It is 
+Computers & Security 141 (2024) 103842
+9
+A.Galli,V.LaGatta,V.Moscatoetal.
+Fig. 5. Sequence-level representations of the LSTM model for the Api Call Sequences dataset. Red points represent malware instances, while blue ones represent 
+goodware instances.
+Fig. 6. Sequence-level representations of the GRU model for the Api Call Sequences dataset. Red points represent malware instances, while blue ones represent 
+goodware instances.
+noteworthy that the SHAP explanation method exhibits superior space-
+separation between malware and goodware instances for the LSTM 
+model. However, this observation does not hold for the GRU model, 
+where a high degree of overlap between the two classes is observed.
+5.4.3. Perturbation experiment
+We perform a perturbation experiment, a.k.a. “pixel-ﬂipping” in com-
+puter vision(Samek  et al. (2016)), by perturbing system calls from the 
+input sequences according to their relevance values, and tracking the 
+impact on the classiﬁcation performance (Qiu et al. (2022)). This quan-
+titative analysis aims to answer two questions:
+•w e r e the features extracted from the explanation the ones the 
+model looked at for its prediction? (perturbation experiment)
+•a r e the most important features provided by explanations suﬃcient 
+to make the model do its prediction? (suﬃciency experiment)
+In particular, we consider three token perturbation strategies Zhang 
+et al. (2020): (1) removal, (2) random modiﬁcation and (3) replace-
+ment with the padding token. We perturb a percentage of the APIs 
+per sequence considering the ascending/descending order of the scores 
+assigned by explainers. Speciﬁcally, we perform two experiments: i) 
+perturbation of the 1%, 5%and 10% of the most relevant APIs (pertur-
+bation experiment); ii) perturbation of the 70%, 80%, 90%, 95%, 99%of 
+the least relevant APIs (suﬃciency experiment).
+In Table 6 (resp. Table 7) we report the mean changes in LSTM 
+(resp. GRU) prediction probabilities when perturbing the 1% of the 
+most important tokens (i.e., perturbation experiment) and the 99% of 
+the least important tokens (i.e., suﬃciency experiment). What stands 
+out is that the perturbation strategy (i.e. removal, random modiﬁcation, 
+replacement) can have strong inﬂuence on the changes in prediction 
+probabilities, but the comparison of explanation techniques is not inﬂu-
+enced by such diﬀerences.
+Fig. 7 (a) and (b) show the full results of the perturbation exper-
+iment, for LSTM and GRU models, respectively. Each plot reports the 
+mean changes in prediction probabilities varying the percentage of per-
+turbed instances. Results are averaged across the three perturbation 
+types. More speciﬁcally, in Fig. 7(a) the percentage of perturbed to-
+kens varies from 1% to 10% and SHAP and LRP provide by far the 
+most comprehensive explanations since there is a signiﬁcant drop of 
+the target class probability even removing a small percentage of the top 
+rated APIs (e.g. about 40% drop by removing the 1% top calls rated 
+by SHAP on the Alibaba dataset). LIME performance is generally worse 
+than SHAP and LRP, due to its uncertainty (Zhang et al. (2019)) and 
+Computers & Security 141 (2024) 103842
+10
+A.Galli,V.LaGatta,V.Moscatoetal.
+Table 6
+Eﬀects of the tokens perturbation strategy on the perturbation experiment for the LSTM model. Results refer to perturbing the 1% (99%) 
+of the most (least) relevant API calls for the perturbation (suﬃciency) experiment.
+Perturbation Suﬃciency
+Dataset Explainer Delete Replace Padding Delete Replace Padding
+Mal-API-2019
+Random -4.39 ±0.32 -3.15 ±0.28 -1.00 ±0.15 −47.18±1 .291 −26 .55±1 .773 −44 .74±2 .020
+LIME -7.33 ± 0.42 -6.12 ± 0.40 -4.10 ± 0.32 −46.49±1 .267 −21 .64±1 .646 −44 .68±2 .042
+LRP -6.78 ±0.40 -4.91 ±0.36 -3.61 ±0.29 −46.28±1 .268 −19 .08±1 .607 −44 .69±2 .025
+SHAP -6.36 ±0.38 -4.94 ±0.36 -3.09 ±0.28 −46.48±1 .262 −18 .95±1 .615 −44 .71±2 .022
+Attention 0.23 ±5.79 -0.95 ±8.38 0.30 ±5.90 -12.69 ± 1.698 -10.28 ± 1.461 -12.78 ± 1.693
+APICallSequences
+Random -0.88 ±0.17 -0.83 ±0.17 -0.37 ±0.11 −34.03±0 .670 −13 .54±0 .654 −22 .59±0 .337
+LIME -1.49 ±0.22 -1.66 ±0.23 -1.31 ±0.20 −17.59±0 .602 −12 .56±0 .634 −19 .58±0 .422
+LRP -14.43 ±0.66 -12.07 ± 0.63 -13.39 ±0.67 −6.815±0 .466 −12 .03±0 .618 −22 .95±0 .503
+SHAP -19.01 ± 0.75 -11.99 ±0.63 -13.76 ± 0.68 −𝟐.𝟐𝟕𝟐± 𝟎.𝟐𝟕𝟑 −10.98±0 .598 − 𝟏𝟐.𝟒𝟔± 𝟎.𝟑𝟕𝟖
+Attention 0±0 0±0 0±0 -19.82 ±0.912 -8.719 ± 0.622 1.675 ±0.301
+Alibaba
+Random -2.92 ±0.57 -6.93 ±0.81 -0.76 ±0.25 −64.67±1 .292 −55 .38±1 .560 −75 .09±0 .912
+LIME -13.83 ±1.16 -20.53 ±1.34 -12.25 ±1.09 −52.37±1 .536 −43 .87±1 .600 −60 .44±1 .439
+LRP -23.95 ±1.38 -34.18 ±1.55 -23.57 ±1.35 −49.73±1 .563 −36 .15±1 .568 −46 .12±1 .598
+SHAP -38.59 ± 1.58 -46.23 ± 1.60 -42.56 ± 1.57 −𝟒𝟎.𝟒𝟗± 𝟏.𝟓𝟐𝟗 −𝟐𝟕.𝟔𝟖± 𝟏.𝟒𝟔𝟕 −32.68±1 .533
+Attention -0.53 ±11.18 -5.42 ±25.48 0.02 ±11.22 -46.39 ±1.800 -34.29 ±1.753 -32.05 ± 2.009
+Table 7
+Eﬀects of the tokens perturbation strategy on the perturbation experiment for the GRU model. Results refer to perturbing the 1% 
+(99%) of the most (least) relevant API calls for the perturbation (suﬃciency) experiment.
+Perturbation Suﬃciency
+Dataset Explainer Delete Replace Padding Delete Replace Padding
+Mal-API-2019
+Random −1.20±0 .19 −2 .04±0 .46 −0 .24±0 .15 −40 .38±35 .55 −40 .36±35 .52 −37 .24±29 .79
+LIME −5.75±0 .65 −7 .52±0 .82 −5 .12±0 .63 −40 .38±35 .55 −37 .64±35 .21 −33 .79±30 .08
+LRP −8.50±0 .75 −10 .61±0 .89 −8 .47±0 .74 −40 .38±35 .55 −36 .44±34 .91 −32 .11±30 .01
+SHAP −4.13±0 .58 −5 .76±0 .77 −3 .35±0 .57 −40 .38±35 .55 −38 .93±35 .32 −34 .55±29 .62
+Attention −0.78±0 .25 −2 .56±0 .48 −0 .85±0 .26 −55 .54±40 .90 −55 .67±40 .87 −44 .04±25 .53
+APICallSequences
+Random −0.92±0 .13 −0 .98±0 .17 −0 .22±0 .07 −42 .77±34 .24 −24 .11±12 .84 −3 .069±16 .53
+LIME −2.49±0 .32 −2 .37±0 .36 −1 .16±0 .22 −38 .91±36 .71 −14 .11±17 .74 −2 .925±16 .48
+LRP −7.09±0 .47 −7 .45±0 .48 −6 .08±0 .44 −27 .28±34 .03 −14 .75±18 .80 −2 .777±16 .02
+SHAP −0.78±0 .14 −1 .19±0 .21 −0 .47±0 .14 −26 .89±25 .08 −30 .02±24 .44 −3 .264±16 .98
+Attention −4.93±0 .31 −4 .38±0 .29 −4 .59±0 .29 −45 .37±34 .65 −21 .43±16 .97 −2 .881±16 .19
+Alibaba
+Random −0.20±0 .06 −1 .66±0 .30 −0 .07±0 .04 −40 .43±38 .71 −44 .90±41 .86 −37 .93±36 .56
+LIME −2.15±0 .36 −4 .61±0 .53 −1 .98±0 .34 −32 .26±35 .15 −41 .19±41 .34 −37 .81±36 .47
+LRP −15.29±0 .94 −21 .46±1 .11 −17 .08±0 .98 −7 .910±19 .87 −12 .76±25 .46 −33 .43±34 .83
+SHAP −10.59±1 .51 −11 .81±1 .55 −10 .85±1 .55 −23 .48±29 .66 −19 .83±30 .50 −37 .43±35 .90
+Attention −0.89±0 .23 −3 .92±0 .53 −1 .34±0 .30 −35 .99±38 .79 −39 .42±37 .35 −39 .42±37 .46
+reliance on datasets and models involved in the explanation (Nguyen 
+(2018)). On the other hand, for the GRU model LRP method proves to 
+achieve the best performance for all the datasets under analysis.
+Furthermore, the results of the suﬃciency experiment are illustrated 
+in Fig.8(a) and (b) for the LSTM and GRU models, respectively. Each 
+plot depicts the variations in prediction probabilities upon perturbing a 
+percentage of the least important API calls, thereby preserving only a 
+portion of unchanged tokens (ranging from 1% to 30%). For example, 
+the LSTM’s predictions do not change at all for the API Call Sequences 
+dataset when removing 70% of the least important features identiﬁed 
+through SHAP. In general, the results once again underscore the domi-
+nance of SHAP for the LSTM model and LRP for the GRU model when 
+evaluating the suﬃciency of the provided explanations. This discrep-
+ancy can be attributed to the complexity contrast between the models 
+under analysis, where the LSTM outperforms the GRU (as outlined in 
+Table 4) by learning more intricate representations and incorporat-
+ing additional parameters. As a result, a gradient-based method like 
+LRP could more eﬀortlessly propagate relevance through the layers of 
+simpler models (like GRU), further emphasizing the intricate interplay 
+between model complexity and the eﬀectiveness of explanation meth-
+ods.
+With regards to the attention mechanism, in the perturbation exper-
+iment we can observe that it seems to not have caught the real patterns 
+the model looks at, when making predictions. These results are con-
+sistent with the current literature (Jain and Wallace (2019); Wiegreﬀe 
+and Pinter (2019); Schlegel and Keim (2023)) which discusses about 
+the low explainability power of the attention mechanism in various NLP 
+tasks (e.g. text classiﬁcation, natural language inference) and time se-
+ries analysis, respectively. However, when considering the suﬃciency 
+experiment, the attention is competitive with other techniques and, in 
+the case Mal-API-2019 dataset, it even provides the best explanations 
+because predictions do not change when perturbing useless features.
+5.4.4. Stability
+The explanations provided for the security domain should be reliable 
+in order to be considered by expert analysts. In other words, the scores 
+representing the system calls importance need to be stable over time: 
+we expect homogeneous explanations for the same sequence or similar 
+ones. Besides, from the XAI perspective, unstable explanations cannot 
+express the real knowledge of the model.
+We measured stability of the XAI techniques explaining the same in-
+stances multiple times and measuring the intersection of explanations 
+as deﬁned in equation (2). Speciﬁcally, we deﬁned the explainer with 
+20% of the training dataset, repeated explanations 30 times and aver-
+aged the results over 100sequences from the testing set, 95%conﬁdence 
+intervals have been computed as well. Table8shows that LIME cannot 
+provide stable explanations for any dataset and model, achieving very 
+low scores, limiting its applicability to real scenarios. This behavior 
+Computers & Security 141 (2024) 103842
+11
+A.Galli,V.LaGatta,V.Moscatoetal.
+Fig. 7. Resultsshowinghowtheprobabilityofthepredictedclasschangeswhenp erturbingthemostrelevantfeaturesfortheLSTM(a)andGRU(b)models.
+Fig. 8. Resultsshowinghowtheprobabilityofthepredictedclasschangeswhenp erturbingleastrelevantfeaturesfortheLSTM(a)andGRU(b)models.
+Computers & Security 141 (2024) 103842
+12
+A.Galli,V.LaGatta,V.Moscatoetal.
+Table 8
+Stability results.
+LSTM GRU
+Method Mal-API-2019 APICallSequences Alibaba Mal-API-2019 APICallSequences Alibaba
+LIME 0.1505±0 .0137 0 .0806±0 .0091 0 .0914±0 .0072 0 .1376±0 .0112 0 .1155±0 .0114 0 .0940±0 .0064
+SHAP 0.8076±0 .0842 0 .7984±0 .0914 0 .4995±0 .0292 0 .5701±0 .0444 0 .5920±0 .0380 0 .3095±0 .0304
+LRP 𝟏.𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎
+Attention 𝟏.𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎 𝟏 .𝟎𝟎𝟎
+clearly depends on the variability introduced by the stochastic neigh-
+bors’ generation process, i.e. if the neighborhood is highly unstable, 
+the explanation’s locality changes as well. On the other hand, SHAP 
+reaches good results on two out of the three datasets, especially on the 
+LSTM model. Speciﬁcally, the poorer stability on the Alibaba dataset 
+probably depends on the longer malware sequences which, in turn, de-
+termine greater errors when approximating Shapley values. Finally, LRP 
+and Attention provide, by construction, deterministic explanations thus 
+reaching the maximum stability score.
+5.5. Case study
+We conduct a case study on the diﬀerent malware classes of the 
+Alibaba dataset for showing how XAI analysis can support practitioners 
+in the understanding of malicious behaviors. Fig.9shows the LRP scores 
+assigned to API call sequences classiﬁed as Backdoor, Downloader, and 
+Trojan, respectively.
+•Fig. 9a (Backdoor) This attack aims at maintaining a connection 
+with a remote host bypassing any network security mechanism 
+and does not perform any peculiar malicious activity. The expla-
+nation unveils this behavior due to the high relevance assigned to 
+the InternetOpenA and InternetOpenUrlA calls, meaning that the 
+malware is trying to connect via URL. On the contrary, the other 
+API calls which represent the actual activity performed on the re-
+mote host (e.g. CreateServiceand FindResource) are not considered 
+important for the classiﬁcation;
+•Fig. 9b (Downloader). A Downloader is a type of Trojan horse 
+that downloads and installs malicious software without the con-
+sent of the user. The explanation provided by LRP highlights the 
+NtOpenDirectoryObjectcall  which tries to copy ﬁles from a part to 
+another of the ﬁle system.11
+•Fig. 9c (Trojan). A Trojan Horse malware downloads onto a com-
+puter disguised as a legitimate program. Usually, the attacker hides 
+malicious code within a legitimate software to gain access to the 
+system of a user. In ﬁgure, we can notice that NtFreeVirtualMemory
+and NtAllocateVirtualMemory calls have been assigned a high 
+score, probably due to a buﬀer overﬂow tentative which is trying 
+to work with virtual memory in order to inject commands. Further-
+more, GetSystemTimeAsFileTimeis  a well-known part of malicious 
+Trojan softwares.12
+Speciﬁcally, this approach reduces the number of false positives by 
+enabling a Security Operation Center (SOC) operator, for example, to 
+focus on speciﬁc patterns, as also discussed in Chen et al. (2024). For 
+instance, the API call CreateProcessInternalW, which has been requested 
+by the service A (CreateServiceA) installed through the use of the back-
+door (InternetOpenA), initiates the execution of a process that can be 
+monitored through a hidden interface. The emphasis placed on the API 
+call NtFreeVirtualMemory focuses the operator’s attention on previous 
+processes that have allocated memory for instantiating a service. In ad-
+dition, the malware analyst can more quickly unveil distinctive patterns 
+11 https://www .malwarebytes .com /blog /news /2017 /05 /the -worm -that -
+spreads -wanacrypt0r.
+12 https://vms .drweb -av .it /virus /?i =3843863.
+to identify the attack techniques used by the speciﬁc malware. In fact, 
+the same evidence was found within numerous procedures of MITRE 
+within the “Command and Control” tactic13 referred to the “Application 
+Layer Protocol: Web Protocols” technique,14 which inherently involves 
+the API call InternetOpenA.
+5.6. Discussion
+Looking at the big picture, the data-driven nature of the CTI pro-
+cess can be strongly improved with AI-based systems. Nevertheless, XAI 
+methods and tools are essential to make the most recent AI advance-
+ments applicable in real security scenarios, thus enhancing the need of 
+jointly integrating the two elements into existing CTI platforms. From 
+the end-user viewpoint, the idea is to replicate the same thinking pro-
+cess a domain expert does when reaching a conclusion supported by 
+the results of (a series of) statistical methods. From this perspective, the 
+explanation should reveal those insights or at least guide the analyst to-
+wards them. For instance, when discovering the system’s components 
+aﬀected by a malware, the explanations could support the analyst in 
+understanding what has happened, why it happened and which inter-
+ventions to prioritize to restore the system.
+The experiments conducted in the previous sections highlight that 
+further research is needed in the XAI ﬁeld to achieve these goals. Firstly, 
+the compatibility study shows that there is little accordance between 
+XAI techniques, thus increasing the need to deﬁne ground truth expla-
+nations for predictions.
+Meanwhile, the explanation quality can be estimated indirectly by 
+measuring how explanation-driven experiments impact on model per-
+formance. From this perspective, SHAP established its superiority in 
+both the perturbation and stability experiments but its limitation is 
+clear when considering the eﬃciency: not only is the computation time 
+higher w.r.t. other techniques, but also this gap increases exponen-
+tially when considering more (training) data or longer sequences. On 
+the other hand, LRP performs slightly worse on the perturbation ex-
+periment but outperforms all other post-hoc methods when it comes to 
+stability and time eﬃciency.
+In general, LIME performs worse than SHAP and LRP and reveals its 
+greatest limitation when considering the explanations’ stability: on two 
+out of the three datasets we considered, the method is able to retrieve 
+repeatedly less than the 10%of the top-ranked explanations.
+The sequence-level representations obtained by scaling each API call 
+embedding with the score assigned by the explainer before averaging all 
+the embeddings, show that SHAP delivers the best structured represen-
+tation, while LRP represents all the malwareinstances in a dense region.
+Finally, the attention mechanism seems the worst technique for at 
+least three reasons. First, even if it increases model complexity, it does 
+not improve classiﬁcation performance. Second, it requires model re-
+training and thus cannot be used with oﬀ-the-shelf models. Third, from 
+the XAI perspective, even though the attention scores are consistent 
+for not relevant features, they do not ﬁnd out the most important pat-
+terns leading to the actual predictions. In complete fairness, we can 
+also outline that our dataset might not be suited to understand whether 
+13 https://attack .mitre .org /tactics /TA0011/.
+14 https://attack .mitre .org /techniques /T1071 /001/.
+Computers & Security 141 (2024) 103842
+13
+A.Galli,V.LaGatta,V.Moscatoetal.
+Fig. 9. LRP scores assigned to API call sequences classiﬁed as Backdoor (a), Downloader (b) and Trojan (c). Red and blue tokens have a positive and negative inﬂuence to prediction, respectively. The color intensity 
+indicates the importance of the token as returned by LRP.
+Computers & Security 141 (2024) 103842
+14
+A.Galli,V.LaGatta,V.Moscatoetal.
+or not the attention mechanism provides explanations since its learn-
+ing power is not exploited during the learning process (Wiegreﬀe and 
+Pinter (2019)).
+6. Conclusions & future work
+In this paper, we have proposed an eXplainable Artiﬁcial Intelli-
+gence framework for the behavioral malware detection problem. The 
+main goal has been to evaluate the eﬀectiveness of four XAI methods 
+applied to a sequence-based deep learning architecture, and their appli-
+cability and suitability in the modern CS scenarios.
+In particular, the reported experiments have shown, as highlighted 
+in our discussions, the feasibility of diﬀerent XAI techniques for ex-
+plaining the decision of the LSTM-based classiﬁer both in terms of 
+explanations’ quality and running times necessary to obtain the related 
+results. Furthermore, other experiments have proven the stability and 
+ﬂexibility of the exploited tools. Note that we analyze localexplanation 
+methods, i.e. methods in this work are able to explain predictions about 
+single input samples. Global explanations are out of the scope of this 
+work.
+However, one of the main limitations of this analysis mainly con-
+cerns the eﬀectiveness evaluation of XAI methodologies due to the 
+lack of qualitative metrics to directly evaluate the eﬀectiveness of XAI 
+methodologies. Another limitation may be related to the analyzed do-
+main, that could aﬀect the main ﬁndings of the analysis.
+Future work will be devoted to test additional XAI methods and the 
+robustness of the proposed architecture with respect to adversarial at-
+tacks and how such kind of perturbations can inﬂuence the quality of 
+produced explanations. Furthermore, we wonder whether the explana-
+tions can be exploited to improve the classiﬁcation performance even 
+supporting the discovery of systematic errors of the predictive model. 
+Finally, we will evaluate the explanations in real-world scenarios mea-
+suring their eﬀectiveness and eﬃcacy w.r.t. how they improve or speed 
+up the expert analyst’s work.
+CRediT authorship contribution statement
+Antonio Galli: Writing – review & editing, Writing – original 
+draft, Validation, Software, Methodology, Formal analysis, Data cu-
+ration, Conceptualization. Valerio La Gatta: Formal analysis, Data 
+curation, Conceptualization, Methodology, Software, Validation, Writ-
+ing – original draft, Writing – review & editing. Vincenzo Moscato:
+Conceptualization, Data curation, Formal analysis, Methodology, Soft-
+ware, Validation, Writing – original draft, Writing – review & editing.
+Marco Postiglione:Conceptualization, Data curation, Formal analysis, 
+Methodology, Software, Validation, Writing – original draft, Writing – 
+review & editing. Giancarlo Sperlì:Writing – review & editing, Writing 
+– original draft, Validation, Software, Methodology, Conceptualization, 
+Data curation, Formal analysis.
+Declaration of competing interest
+The authors declare that they have no known competing ﬁnancial 
+interests or personal relationships that could have appeared to inﬂuence 
+the work reported in this paper.
+Data availability
+The authors do not have permission to share data.
+Appendix A. Classiﬁcation results
+Tables9, 10and 11show the category-wise results obtained by the 
+black-box LSTM model in terms of Precision, Recall and F1 for Mal-API-
+2019, Alibabaand API Call Sequencesdatasets, respectively.
+Appendix B. PCA experiment
+Fig. 10 and 11 show the resulting 2D whitened PCA projections of 
+the test set sequences for Alibaba and Catak datasets.
+References
+Alazab, M., Layton, R., Venkatraman, S., Watters, P., 2010. Malware detection based on 
+structural and behavioural features of api calls. In: International Cyber Resilience 
+Conference (1st: 2010). Edith Cowan University, pp.1–10.
+Ali, S., Abuhmed, T., El-Sappagh, S., Muhammad, K., Alonso-Moral, J.M., Confalonieri, R., 
+Guidotti, R., Del Ser, J., Díaz-Rodríguez, N., Herrera, F., 2023. Explainable artiﬁcial 
+intelligence (XAI): what we know and what is left to attain trustworthy artiﬁcial 
+intelligence. Inf. Fusion99,  101805. https://doi .org /10 .1016 /j .inﬀus .2023 .101805.
+Alibaba Cloud, 2018. Alibaba cloud malware detection based on behaviors. https://
+tianchi .aliyun .com /getStart /information .htm ?raceId =231694. (Accessed 2 January 
+2024).
+Alvarez-Melis, D., Jaakkola, T., 2018. On the robustness of interpretability methods. 
+arXiv :1806 .08049[abs].
+Arras, L., Montavon, G., Müller, K.R., Samek, W., 2017. Explaining recurrent neural net-
+work predictions in sentiment analysis. EMNLP2017,  159.
+Arras, L., Osman, A., Müller, K.R., Samek, W., 2019. Evaluating recurrent neural network 
+explanations. Preprint. arXiv :1904 .11829.
+Aversano, L., Bernardi, M.L., Cimitile, M., Iammarino, M., Verdone, C., 2023. A data-
+aware explainable deep learning approach for next activity prediction. Eng. Appl. 
+Artif. Intell.126,  106758. https://doi .org /10 .1016 /j .engappai .2023 .106758.
+Bach, S., Binder, A., Montavon, G., Klauschen, F., Müller, K., Samek, W., 2015. On pixel-
+wise explanations for non-linear classiﬁer decisions by layer-wise relevance propaga-
+tion. PLoS ONE10.  https://doi .org /10 .1371 /journal .pone .0130140.
+Bahdanau, D., Cho, K.H., Bengio, Y., 2015. Neural machine translation by jointly learning 
+to align and translate. In: 3rd International Conference on Learning Representations, 
+ICLR 2015.
+Barata, C., Celebi, M.E., Marques, J.S., 2021. Explainable skin lesion diagnosis using 
+taxonomies. Pattern Recognit. 110, 107413. https://doi .org /10 .1016 /j .patcog .2020 .
+107413.
+Bazrafshan, Z., Hashemi, H., Fard, S.M.H., Hamzeh, A., 2013. A survey on heuristic mal-
+ware detection techniques. In: The 5th Conference on Information and Knowledge 
+Technology. IEEE, pp.113–120.
+Bhat, P., Behal, S., Dutta, K., 2023. A system call-based Android malware detection ap-
+proach with homogeneous & heterogeneous ensemble machine learning. Comput. 
+Secur.130,  103277. https://doi .org /10 .1016 /j .cose .2023 .103277.
+Catak, F.O., Yazı, A.F., Elezaj, O., Ahmed, J., 2020. Deep learning based sequential model 
+for malware analysis using windows exe api calls. PeerJ Comput. Sci.6,  e285. https://
+doi .org /10 .7717 /peerj -cs .285.
+Cavaliere, D., Gallo, M., Stanzione, C., 2023. Propaganda detection robustness through 
+adversarial attacks driven by eXplainable AI. In: World Conference on Explainable 
+Artiﬁcial Intelligence. Springer, pp.405–419.
+Chakraborty, T., Pierazzi, F., Subrahmanian, V.S., 2020. Ec2: Ensemble clustering and 
+classiﬁcation for predicting Android malware families. IEEE Trans. Dependable Se-
+cure Comput.17  (2), 262–277. https://doi .org /10 .1109 /TDSC .2017 .2739145.
+Chen, B., Liu, Y., Zhang, Z., Lu, G., Kong, A.W.K., 2023. TransAttUnet: multi-level 
+attention-guided U-net with transformer for medical image segmentation. IEEE Trans. 
+Emerg. Top. Comput. Intell., 1–14. https://doi .org /10 .1109 /TETCI .2023 .3309626.
+Chen, T., Zeng, H., Lv, M., Zhu, T., 2024. CTIMD: Cyber threat intelligence enhanced 
+malware detection using API call sequences with parameters. Comput. Secur. 136, 
+103518. https://doi .org /10 .1016 /j .cose .2023 .103518.
+Cheng, B., Ming, J., Leal, E.A., Zhang, H., Fu, J., Peng, G., Marion, J.Y., 2021. 
+{Obfuscation-Resilient} executable payload extraction from packed malware. In: 
+30th USENIX Security Symposium (USENIX Security, vol.21,  pp.3451–3468.
+Damodaran, A., Di Troia, F., Visaggio, C.A., Austin, T.H., Stamp, M., 2017. A compari-
+son of static, dynamic, and hybrid analysis for malware detection. J. Comput. Virol. 
+Hacking Tech.13  (1), 1–12. https://doi .org /10 .1007 /s11416 -015 -0261 -z.
+Demirkıran, F., Çayır, A., Ünal, U., Da˘g, H., 2022. An ensemble of pre-trained trans-
+former models for imbalanced multiclass malware classiﬁcation. Comput. Secur.121,  
+102846. https://doi .org /10 .1016 /j .cose .2022 .102846.
+Du, M., Liu, N., Hu, X., 2019. Techniques for interpretable machine learning. Commun. 
+ACM63  (1), 68–77. https://doi .org /10 .1145 /3359786.
+Dwarampudi, M., Reddy, N.V.S., 2019. Eﬀects of padding on lstms and cnns. CoRR. arXiv :
+1903 .07288.
+Fan, M., Wei, W., Xie, X., Liu, Y., Guan, X., Liu, T., 2021. Can we trust your explanations? 
+Sanity checks for interpreters in Android malware analysis. IEEE Trans. Inf. Forensics 
+Secur.16,  838–853. https://doi .org /10 .1109 /TIFS .2020 .3021924.
+Fei, W., Ohno, H., Sampalli, S., 2023. A systematic review of iot security: research 
+potential, challenges, and future directions. ACM Comput. Surv. 56 (5). https://
+doi .org /10 .1145 /3625094.
+Gaber, M.G., Ahmed, M., Janicke, H., 2023. Malware detection with artiﬁcial intelli-
+gence: a systematic literature review. ACM Comput. Surv. https://doi .org /10 .1145 /
+3638552.
+Computers & Security 141 (2024) 103842
+15
+A.Galli,V.LaGatta,V.Moscatoetal.
+Table 9
+Results of LSTM model on the malware_api_classdata-set detailed for each class.
+Metric Adware Backdoor Downloader Dropper Spyware Trojan Virus Worms
+Precision 34.23% 31.50% 61.48% 37.44% 24.32% 21.52% 76.41% 42.42%
+Recall 50.00% 40.00% 41.50% 41.01% 16.17% 24.00% 74.13% 42.00%
+F1 40.64% 35.24% 49.55% 39.14% 19.42% 22.70% 75.25% 42.21%
+Table 10
+Results of LSTM model on the Alibaba Cloud Malwaredata-set detailed for each class.
+Metric Normal Ransom miner DDoS Worm Virus Backdoor Trojan
+Precision 93.92% 87.23% 84.32% 53.51% 23.53% 93.73% 44.68% 51.92%
+Recall 93.38% 87.23% 85.41% 58.58% 25.00% 90.77% 46.15% 53.79%
+F1 93.65% 87.23% 84.86% 55.93% 24.24% 92.23% 45.41% 52.84%
+Fig. 10. PCAprojectionsonthe AlibabaCloudMalware data-set.
+Table 11
+Results of LSTM model on the API 
+Call Sequences data-set detailed by 
+each class.
+Metric Goodware Malware
+Precision 92.35% 99.59%
+Recall 83.80% 99.82%
+F1 87.86% 99.71%
+Galloro, N., Polino, M., Carminati, M., Continella, A., Zanero, S., 2022. A systematical and 
+longitudinal study of evasive behaviors in windows malware. Comput. Secur. 113, 
+102550. https://doi .org /10 .1016 /j .cose .2021 .102550.
+Gopinath, M., Sethuraman, S.C., 2023. A comprehensive survey on deep learning based 
+malware detection techniques. Comput. Sci. Rev. 47, 100529. https://doi .org /10 .
+1016 /j .cosrev .2022 .100529.
+Guidotti, R., Monreale, A., Ruggieri, S., Pedreschi, D., Turini, F., Giannotti, F., 2018. Local 
+rule-based explanations of black box decision systems. arXiv :1805 .10820[abs].
+Han, W., Xue, J., Wang, Y., Huang, L., Kong, Z., Mao, L., 2019. Maldae: detecting and 
+explaining malware based on correlation and fusion of static and dynamic character-
+istics. Comput. Secur.83,  208–233. https://doi .org /10 .1016 /j .cose .2019 .02 .007.
+Hochreiter, S., Schmidhuber, J., 1997. Long short-term memory. Neural Comput. 9 (8), 
+1735–1780. https://doi .org /10 .1162 /neco .1997 .9 .8 .1735.
+Imran, M., Afzal, M.T., Qadir, M.A., 2015. Using hidden Markov model for dynamic mal-
+ware analysis: ﬁrst impressions. In: 2015 12th International Conference on Fuzzy 
+Systems and Knowledge Discovery (FSKD), pp.816–821.
+Jahromi, A.N., Hashemi, S., Dehghantanha, A., Parizi, R.M., Choo, K.K.R., 2020. An en-
+hanced stacked lstm method with no random initialization for malware threat hunting 
+in safety and time-critical systems. IEEE Trans. Emerg. Top. Comput. Intell. 4 (5), 
+630–640. https://doi .org /10 .1109 /TETCI .2019 .2910243.
+Jain, S., Wallace, B.C., 2019. Attention is not explanation. In: Proceedings of the 2019 
+Conference of the North American Chapter of the Association for Computational Lin-
+guistics: Human Language Technologies, Volume 1 (Long and Short Papers). Associa-
+tion for Computational Linguistics, Minneapolis, Minnesota, pp.3543–3556. https://
+www .aclweb .org /anthology /N19 -1357.
+Jeon, S., Moon, J., 2020. Malware-detection method with a convolutional recurrent neural 
+network using opcode sequences. Inf. Sci. 535, 1–15. https://doi .org /10 .1016 /j .ins .
+2020 .05 .026.
+Jha, S., Prashar, D., Long, H.V., Taniar, D., 2020. Recurrent neural network for detecting 
+malware. Comput. Secur.99,  102037. https://doi .org /10 .1016 /j .cose .2020 .102037.
+Karn, R.R., Kudva, P., Huang, H., Suneja, S., Elfadel, I.M., 2021. Cryptomining detec-
+tion in container clouds using system calls and explainable machine learning. IEEE 
+Trans. Parallel Distrib. Syst. 32 (3), 674–691. https://doi .org /10 .1109 /TPDS .2020 .
+3029088.
+Kiefer, S., 2022. CaSE: explaining text classiﬁcations by fusion of local surrogate expla-
+nation models with contextual and semantic knowledge. Inf. Fusion 77, 184–195. 
+https://doi .org /10 .1016 /j .inﬀus .2021 .07 .014.
+Kokalj, E., Škrlj, B., Lavraˇc, N., Pollak, S., Robnik-Šikonja, M., 2021. BERT meets Shapley: 
+extending SHAP explanations to transformer-based classiﬁers. In: Proceedings of the 
+EACL Hackashop on News Media Content Analysis and Automated Report Generation. 
+Online: Association for Computational Linguistics, pp. 16–21. https://www .aclweb .
+org /anthology /2021 .hackashop -1 .3.
+Li, C., Lv, Q., Li, N., Wang, Y., Sun, D., Qiao, Y., 2022a. A novel deep framework for 
+dynamic malware detection based on API sequence intrinsic features. Comput. Se-
+cur.116,  102686. https://doi .org /10 .1016 /j .cose .2022 .102686.
+Computers & Security 141 (2024) 103842
+16
+A.Galli,V.LaGatta,V.Moscatoetal.
+Fig. 11. PCAprojectionsonthe malware_api_classdata-setdetailedforeachclass.
+Li, Q., Peng, H., Li, J., Xia, C., Yang, R., Sun, L., Yu, P.S., He, L., 2022b. A survey on text 
+classiﬁcation: from traditional to deep learning. ACM Trans. Intell. Syst. Technol.13  
+(2). https://doi .org /10 .1145 /3495162.
+Liu, Y., Tantithamthavorn, C., Li, L., Liu, Y., 2022a. Deep learning for Android malware 
+defenses: a systematic literature review. ACM Comput. Surv. 55 (8), 1–36. https://
+doi .org /10 .1145 /3544968.
+Liu, Y., Tantithamthavorn, C., Li, L., Liu, Y., 2022b. Explainable ai for Android mal-
+ware detection: towards understanding why the models perform so well? In: 2022 
+IEEE 33rd International Symposium on Software Reliability Engineering (ISSRE), 
+pp.169–180.
+Lundberg, S.M., Lee, S.I., 2017. A uniﬁed approach to interpreting model predictions. 
+In: Guyon, I., Luxburg, U.V., Bengio, S., Wallach, H., Fergus, R., Vishwanathan, 
+S., Garnett, R. (Eds.), Advances in Neural Information Processing Systems, vol. 30. 
+Curran Associates, Inc. https://proceedings .neurips .cc /paper _ﬁles /paper /2017 /ﬁle /
+8a20a8621978632d76c43dfd28b67767 -Paper .pdf.
+Marques, P., Rhode, M., Gashi, I., 2021. Waste not: using diverse neural networks from hy-
+perparameter search for improved malware detection. Comput. Secur.108,  102339. 
+https://doi .org /10 .1016 /j .cose .2021 .102339.
+Melis, M., Maiorca, D., Biggio, B., Giacinto, G., Roli, F., 2018. Explaining black-box 
+Android malware detection. In: 2018 26th European Signal Processing Conference 
+(EUSIPCO). IEEE, pp.524–528.
+Mills, R., Marnerides, A.K., Broadbent, M., Race, N., 2022. Practical intrusion detection of 
+emerging threats. IEEE Trans. Netw. Serv. Manag.19  (1), 582–600. https://doi .org /
+10 .1109 /TNSM .2021 .3091517.
+Nguyen, D., 2018. Comparing automatic and human evaluation of local explanations for 
+text classiﬁcation. In: Proceedings of the 2018 Conference of the North American 
+Chapter of the Association for Computational Linguistics: Human Language Tech-
+nologies, Volume 1 (Long Papers), pp.1069–1078.
+Oksuz, K., Cam, B.C., Kalkan, S., Akbas, E., 2022. One metric to measure them all: lo-
+calisation recall precision (LRP) for evaluating visual detection tasks. IEEE Trans. 
+Pattern Anal. Mach. Intell. 44 (12), 9446–9463. https://doi .org /10 .1109 /TPAMI .
+2021 .3130188.
+de Oliveira, A.S., Sassi, R.J., 2023. Behavioral malware detection using deep graph con-
+volutional neural networks. Authorea Preprints.
+Pei, X., Yu, L., Tian, S., 2020. Amalnet: a deep learning framework based on graph 
+convolutional networks for malware detection. Comput. Secur.93,  101792. https://
+doi .org /10 .1016 /j .cose .2020 .101792.
+Pendleton, M., Garcia-Lebron, R., Cho, J.H., Xu, S., 2016. A survey on systems security 
+metrics. ACM Comput. Surv.49  (4). https://doi .org /10 .1145 /3005714.
+Qiu, L., Yang, Y., Cao, C.C., Zheng, Y., Ngai, H., Hsiao, J., Chen, L., 2022. Generat-
+ing perturbation-based explanations with robustness to out-of-distribution data. In: 
+WWW ’22 Proceedings of the ACM Web Conference 2022. Association for Computing 
+Machinery, New York, NY, USA, pp.3594–3605.
+Ribeiro, M.T., Singh, S., Guestrin, C., 2016. “Why should I trust you?”: explaining the 
+predictions of any classiﬁer. In: Proceedings of the 22nd ACM SIGKDD International 
+Conference on Knowledge Discovery and Data Mining.
+Rong, Y., Leemann, T., Nguyen, T.T., Fiedler, L., Qian, P., Unhelkar, V., Seidel, T., Kas-
+neci, G., Kasneci, E., 2023. Towards human-centered explainable AI: a survey of user 
+studies for model explanations. IEEE Trans. Pattern Anal. Mach. Intell., 1–20. https://
+doi .org /10 .1109 /TPAMI .2023 .3331846.
+Saeed, W., Omlin, C., 2023. Explainable AI (XAI): a systematic meta-survey of current 
+challenges and future opportunities. Knowl.-Based Syst. 263, 110273. https://doi .
+org /10 .1016 /j .knosys .2023 .110273.
+Samek, W., Binder, A., Montavon, G., Lapuschkin, S., Müller, K.R., 2016. Evaluating the 
+visualization of what a deep neural network has learned. IEEE Trans. Neural Netw. 
+Learn. Syst.28  (11), 2660–2673. https://doi .org /10 .1109 /TNNLS .2016 .2599820.
+Santos, I., Penya, Y.K., Devesa, J., Bringas, P.G., 2009. N-grams-based ﬁle sig-
+natures for malware detection. ICEIS 2 (9), 317–320. https://doi .org /10 .5220 /
+0001863603170320.
+Schlegel, U., Keim, D.A., 2023. A deep dive into perturbations as evaluation technique for 
+time series XAI. In: World Conference on Explainable Artiﬁcial Intelligence. Springer, 
+pp.165–180.
+Shapley, L.S., et al., 1988. A Value for N-Person Games. Princeton University Press, 
+Princeton.
+Sun, N., Ding, M., Jiang, J., Xu, W., Mo, X., Tai, Y., Zhang, J., 2023. Cyber threat intelli-
+gence mining for proactive cybersecurity defense: a survey and new perspectives. 
+IEEE Commun. Surv. Tutor. 25 (3), 1748–1774. https://doi .org /10 .1109 /COMST .
+2023 .3273282.
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, L., 
+Polosukhin, I., 2017. Attention is all you need. CoRR. arXiv :1706 .03762.
+Warnecke, A., Arp, D., Wressnegger, C., Rieck, K., 2020. Evaluating explanation methods 
+for deep learning in security. In: 2020 IEEE European Symposium on Security and 
+Privacy (EuroS&P), pp.158–174.
+Wiegreﬀe, S., Pinter, Y., 2019. Attention is not not explanation. In: Proceedings of the 
+2019 Conference on Empirical Methods in Natural Language Processing and the 9th 
+International Joint Conference on Natural Language Processing (EMNLP-IJCNLP). As-
+sociation for Computational Linguistics, Hong Kong, China, pp.11–20.
+Wu, B., Chen, S., Gao, C., Fan, L., Liu, Y., Wen, W., Lyu, M.R., 2021. Why an Android app 
+is classiﬁed as malware: toward malware classiﬁcation interpretation. ACM Trans. 
+Softw. Eng. Methodol.30  (2). https://doi .org /10 .1145 /3423096.
+Yadav, P., Menon, N., Ravi, V., Vishvanathan, S., Pham, T.D., 2022. EﬃcientNet con-
+volutional neural networks-based Android malware detection. Comput. Secur. 115, 
+102622. https://doi .org /10 .1016 /j .cose .2022 .102622.
+Yan, S., Ren, J., Wang, W., Sun, L., Zhang, W., Yu, Q., 2023. A survey of adversarial attack 
+and defense methods for malware classiﬁcation in cyber security. IEEE Commun. 
+Surv. Tutor.25  (1), 467–496. https://doi .org /10 .1109 /COMST .2022 .3225137.
+Yang, Z., Yang, D., Dyer, C., He, X., Smola, A., Hovy, E., 2016. Hierarchical attention 
+networks for document classiﬁcation. In: HLT-NAACL, pp.1480–1489.
+Zhang, W.E., Sheng, Q.Z., Alhazmi, A., Li, C., 2020. Adversarial attacks on deep-learning 
+models in natural language processing: a survey. ACM Trans. Intell. Syst. Technol.11  
+(3). https://doi .org /10 .1145 /3374217.
+Zhang, Y., Song, K., Sun, Y., Tan, S., Udell, M., 2019. “Why should you trust my explana-
+tion?” Understanding uncertainty in lime explanations. arXiv: Learning.
+Zhang, Z., Hamadi, H.A., Damiani, E., Yeun, C.Y., Taher, F., 2022. Explainable arti-
+ﬁcial intelligence applications in cyber security: state-of-the-art in research. IEEE 
+Access10,  93104–93139. https://doi .org /10 .1109 /access .2022 .3204051.
+Computers & Security 141 (2024) 103842
+17
+A.Galli,V.LaGatta,V.Moscatoetal.
+Zhong, F., Cheng, X., Yu, D., Gong, B., Song, S., Yu, J., 2023. MalFox: camouﬂaged adver-
+sarial malware example generation based on conv-GANs against black-box detectors. 
+IEEE Trans. Comput., 1–14. https://doi .org /10 .1109 /TC .2023 .3236901.
+Antonio Galliis a Research Fellow at the Deparment of Elec-
+trical Engineering and Information Technologies of University 
+of Naples Federico II. He holds a Bachelor’s Degree (2016) and 
+Master’s Degree cum laude (2019) in Computer Science and En-
+gineering from the University of Naples ``Federico II”. His main 
+research interests are in the area of Deep Learning and Big Data 
+analytics.
+Valerio La Gattais a PhD student in Information Technology 
+and Electrical Engineering at the Department of Electrical Engi-
+neering and Information technology of the University of Naples 
+Federico II. He received the Master degree in Computer engi-
+neering from the University of Naples Federico II in 2020. His 
+research interests are focused on Social Network Analysis, eX-
+plainable Artiﬁcial Intelligence, Graph Data Mining.
+Vincenzo Moscato is currently an Associate Professor of 
+Database and Information Systems at Department of Electri-
+cal Engineering and Information Technologies of University of 
+Naples Federico II, where he received the Ph.D in Computer Sci-
+ence and Engineering. His current research interests lie in the 
+area of multimedia, knowledge management and Big Data an-
+alytics. He was involved in several international, national and 
+local research projects and at present is an author of more than 
+one hundred publications on international journal and confer-
+ence proceedings.
+Marco Postiglioneis a PhD student in Information and Com-
+munication Technology for Health (ICTH) at the Department of 
+Electrical and Computer Engineering of the University of Naples 
+Federico II. He received the Master’s degree in Computer Engi-
+neering from the University of Naples Federico II in 2020. His 
+research interests are focused on eXplainable Artiﬁcial Intelli-
+gence, Graph Data Mining and Natural Language Processing.
+Giancarlo Sperlìis an assistant professor at the Department 
+of Electrical Engineering and Information Technology of the Uni-
+versity of Naples Federico II. He obtained his PhD in Information 
+Technology and Electrical Engineering at the same University 
+defending his thesis: ``Multimedia Social Networks”. He is a 
+member of the Pattern analysis and Intelligent Computation for 
+mUltimedia Systems (PICUS) departmental research groups. His 
+main research interests are in the area of Cybersecurity, Multi-
+media data analysis and Social Networks Analysis. He served as 
+guest editor of diﬀerent special issues on International Journals. 
+Finally, he has authored about 108 publications in international journals, conference pro-
+ceedings and book chapters.
