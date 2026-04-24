@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Đào Tạo AI - Đồ Án Mã Độc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+        .glass-panel { background: rgba(22, 27, 34, 0.8); backdrop-filter: blur(10px); border: 1px solid #30363d; border-radius: 12px; }
+        .gradient-text { background: linear-gradient(90deg, #A78BFA, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="p-6 md:p-10">
+
+    <!-- Header Section -->
+    <header class="mb-10 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-3 gradient-text uppercase tracking-wider">
+            Báo Cáo Nghiệm Thu Mô Hình
+        </h1>
+        <p class="text-gray-400 text-lg">Phân Tích Hành Vi Mã Độc - BiLSTM & Self-Attention XAI</p>
+    </header>
+
+    <!-- Config Parameters -->
+    <div class="glass-panel p-6 shadow-2xl mb-10 max-w-5xl mx-auto">
+        <h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Tham Số Phần Cứng (Hyperparameters)</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <div class="text-gray-400 text-sm">Sequence Length</div>
+                <div class="text-xl font-bold text-blue-400">100 API</div>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <div class="text-gray-400 text-sm">BiLSTM Units</div>
+                <div class="text-xl font-bold text-purple-400">128 Lõi</div>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <div class="text-gray-400 text-sm">Batch Size</div>
+                <div class="text-xl font-bold text-green-400">64</div>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <div class="text-gray-400 text-sm">Epochs (Vòng Lặp)</div>
+                <div class="text-xl font-bold text-pink-400">15 Cycles</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto mb-10">
+        <!-- Accuracy Chart -->
+        <div class="glass-panel p-6 shadow-2xl flex flex-col items-center">
+            <h2 class="text-2xl font-bold text-white mb-4">Biểu Đồ Tiến Hoá: Accuracy</h2>
+            <div class="w-full relative" style="height: 350px;">
+                <canvas id="accChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Loss Chart -->
+        <div class="glass-panel p-6 shadow-2xl flex flex-col items-center">
+            <h2 class="text-2xl font-bold text-white mb-4">Biểu Đồ Chống Lỗi: Cấu Trúc Trọng Số (Loss)</h2>
+            <div class="w-full relative" style="height: 350px;">
+                <canvas id="lossChart"></canvas>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- NEW: GLOBAL API INFLUENCE SECTION -->
+    <div class="glass-panel p-8 shadow-2xl mb-10 max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-red-500 pl-4">Báo Cáo Mức Độ Ảnh Hưởng API (Feature Influence)</h2>
+        <p class="text-gray-400 mb-6 italic">Xếp hạng các hàm API có tác động lớn nhất đến việc nhận diện mã độc trên toàn bộ tập dữ liệu mẫu.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <!-- Impact Bar Chart -->
+            <div class="w-full relative" style="height: 500px;">
+                <canvas id="impactChart"></canvas>
+            </div>
+            
+            <!-- Impact Table -->
+            <div class="overflow-y-auto" style="max-height: 500px;">
+                <table class="w-full text-sm text-left text-gray-300">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-900 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3">Top</th>
+                            <th class="px-4 py-3">Hàm API</th>
+                            <th class="px-4 py-3 text-right">Hệ Số Chênh Lệch (Impact)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">1</td><td class="px-4 py-2 font-mono text-blue-300">OutputDebugStringA</td><td class="px-4 py-2 text-right font-bold text-red-400">2.06930</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">2</td><td class="px-4 py-2 font-mono text-blue-300">FindFirstFileExA</td><td class="px-4 py-2 text-right font-bold text-red-400">1.83202</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">3</td><td class="px-4 py-2 font-mono text-blue-300">RegQueryValueExA</td><td class="px-4 py-2 text-right font-bold text-red-400">1.58223</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">4</td><td class="px-4 py-2 font-mono text-blue-300">CreateThread</td><td class="px-4 py-2 text-right font-bold text-red-400">1.18846</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">5</td><td class="px-4 py-2 font-mono text-blue-300">GetTimeZoneInformation</td><td class="px-4 py-2 text-right font-bold text-red-400">0.89731</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">6</td><td class="px-4 py-2 font-mono text-blue-300">GlobalMemoryStatusEx</td><td class="px-4 py-2 text-right font-bold text-red-400">0.88799</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">7</td><td class="px-4 py-2 font-mono text-blue-300">WriteConsoleA</td><td class="px-4 py-2 text-right font-bold text-red-400">0.87209</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">8</td><td class="px-4 py-2 font-mono text-blue-300">GetFileType</td><td class="px-4 py-2 text-right font-bold text-red-400">0.74550</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">9</td><td class="px-4 py-2 font-mono text-blue-300">GetTempPathW</td><td class="px-4 py-2 text-right font-bold text-red-400">0.66025</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">10</td><td class="px-4 py-2 font-mono text-blue-300">NtOpenDirectoryObject</td><td class="px-4 py-2 text-right font-bold text-red-400">0.65657</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">11</td><td class="px-4 py-2 font-mono text-blue-300">NULL_API</td><td class="px-4 py-2 text-right font-bold text-red-400">0.63029</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">12</td><td class="px-4 py-2 font-mono text-blue-300">SetFilePointer</td><td class="px-4 py-2 text-right font-bold text-red-400">0.54220</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">13</td><td class="px-4 py-2 font-mono text-blue-300">CreateDirectoryW</td><td class="px-4 py-2 text-right font-bold text-red-400">0.53907</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">14</td><td class="px-4 py-2 font-mono text-blue-300">__exception__</td><td class="px-4 py-2 text-right font-bold text-red-400">0.53691</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">15</td><td class="px-4 py-2 font-mono text-blue-300">NtWriteFile</td><td class="px-4 py-2 text-right font-bold text-red-400">0.47492</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">16</td><td class="px-4 py-2 font-mono text-blue-300">NtAllocateVirtualMemory</td><td class="px-4 py-2 text-right font-bold text-red-400">0.45888</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">17</td><td class="px-4 py-2 font-mono text-blue-300">NtQueryInformationFile</td><td class="px-4 py-2 text-right font-bold text-red-400">0.38325</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">18</td><td class="px-4 py-2 font-mono text-blue-300">GetSystemTimeAsFileTime</td><td class="px-4 py-2 text-right font-bold text-red-400">0.37968</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">19</td><td class="px-4 py-2 font-mono text-blue-300">NtFreeVirtualMemory</td><td class="px-4 py-2 text-right font-bold text-red-400">0.36981</td></tr><tr class="border-b border-gray-800 hover:bg-gray-800"><td class="px-4 py-2 text-gray-500">20</td><td class="px-4 py-2 font-mono text-blue-300">SetUnhandledExceptionFilter</td><td class="px-4 py-2 text-right font-bold text-red-400">0.36422</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classification Reports -->
+    <div class="max-w-5xl mx-auto">
+        <h2 class="text-3xl font-bold text-white mb-6 border-l-4 border-indigo-500 pl-4">Kết Quả Kiểm Soát (Classification Reports)</h2>
+        
+        
+        <div class="relative overflow-x-auto shadow-xl sm:rounded-lg mb-8 border border-gray-700">
+            <h3 class="p-4 text-xl font-bold bg-gray-900 text-indigo-400 border-b border-gray-700">Baseline: Mô Hình LSTM 1 Chiều</h3>
+            <table class="w-full text-sm text-left text-gray-300">
+                <thead class="text-xs text-gray-400 uppercase bg-gray-900">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Class/Metric</th>
+                        <th scope="col" class="px-6 py-3 text-center">Precision</th>
+                        <th scope="col" class="px-6 py-3 text-center">Recall</th>
+                        <th scope="col" class="px-6 py-3 text-center">F1-Score</th>
+                        <th scope="col" class="px-6 py-3 text-center">Support</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">Goodware</td>
+                    <td class="px-6 py-4 text-center">0.859</td>
+                    <td class="px-6 py-4 text-center">0.966</td>
+                    <td class="px-6 py-4 text-center">0.909</td>
+                    <td class="px-6 py-4 text-center">88</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">Malware</td>
+                    <td class="px-6 py-4 text-center">0.972</td>
+                    <td class="px-6 py-4 text-center">0.880</td>
+                    <td class="px-6 py-4 text-center">0.924</td>
+                    <td class="px-6 py-4 text-center">117</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-indigo-900 border-indigo-500 hover:bg-indigo-800">
+                    <td class="px-6 py-4 font-bold text-white">Overall Accuracy</td>
+                    <td class="px-6 py-4 text-center font-bold text-indigo-300" colspan="3">0.917</td>
+                    <td class="px-6 py-4 text-center text-gray-400">-</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">macro avg</td>
+                    <td class="px-6 py-4 text-center">0.915</td>
+                    <td class="px-6 py-4 text-center">0.923</td>
+                    <td class="px-6 py-4 text-center">0.916</td>
+                    <td class="px-6 py-4 text-center">205</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">weighted avg</td>
+                    <td class="px-6 py-4 text-center">0.923</td>
+                    <td class="px-6 py-4 text-center">0.917</td>
+                    <td class="px-6 py-4 text-center">0.917</td>
+                    <td class="px-6 py-4 text-center">205</td>
+                </tr>
+                
+                </tbody>
+            </table>
+        </div>
+        
+        
+        <div class="relative overflow-x-auto shadow-xl sm:rounded-lg mb-8 border border-gray-700">
+            <h3 class="p-4 text-xl font-bold bg-gray-900 text-indigo-400 border-b border-gray-700">Sáng Kiến Đồ Án: Mô Hình BiLSTM Tích Hợp Self-Attention (Đề Nghị)</h3>
+            <table class="w-full text-sm text-left text-gray-300">
+                <thead class="text-xs text-gray-400 uppercase bg-gray-900">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Class/Metric</th>
+                        <th scope="col" class="px-6 py-3 text-center">Precision</th>
+                        <th scope="col" class="px-6 py-3 text-center">Recall</th>
+                        <th scope="col" class="px-6 py-3 text-center">F1-Score</th>
+                        <th scope="col" class="px-6 py-3 text-center">Support</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">Goodware</td>
+                    <td class="px-6 py-4 text-center">0.885</td>
+                    <td class="px-6 py-4 text-center">0.966</td>
+                    <td class="px-6 py-4 text-center">0.924</td>
+                    <td class="px-6 py-4 text-center">88</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">Malware</td>
+                    <td class="px-6 py-4 text-center">0.972</td>
+                    <td class="px-6 py-4 text-center">0.906</td>
+                    <td class="px-6 py-4 text-center">0.938</td>
+                    <td class="px-6 py-4 text-center">117</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-indigo-900 border-indigo-500 hover:bg-indigo-800">
+                    <td class="px-6 py-4 font-bold text-white">Overall Accuracy</td>
+                    <td class="px-6 py-4 text-center font-bold text-indigo-300" colspan="3">0.932</td>
+                    <td class="px-6 py-4 text-center text-gray-400">-</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">macro avg</td>
+                    <td class="px-6 py-4 text-center">0.929</td>
+                    <td class="px-6 py-4 text-center">0.936</td>
+                    <td class="px-6 py-4 text-center">0.931</td>
+                    <td class="px-6 py-4 text-center">205</td>
+                </tr>
+                
+                <tr class="border-b border-gray-700 bg-gray-800 hover:bg-gray-700">
+                    <td class="px-6 py-4 font-medium text-white">weighted avg</td>
+                    <td class="px-6 py-4 text-center">0.935</td>
+                    <td class="px-6 py-4 text-center">0.932</td>
+                    <td class="px-6 py-4 text-center">0.932</td>
+                    <td class="px-6 py-4 text-center">205</td>
+                </tr>
+                
+                </tbody>
+            </table>
+        </div>
+        
+        
+    </div>
+
+    <footer class="mt-16 text-center text-gray-500 text-sm pb-8">
+        Hệ thống được phát xuất tự động từ Pipeline Antigravity MLOps. 
+    </footer>
+
+    <!-- Script rendering the charts -->
+    <script>
+        const epochs = Array.from({ length: 15 }, (_, i) => "Epoch " + (i + 1));
+        
+        // Dữ liệu từ Python JSON
+        const historyData = {"lstm": {"accuracy": [0.5653594732284546, 0.6748365759849548, 0.741830050945282, 0.834967315196991, 0.8120915293693542, 0.8643791079521179, 0.8202614188194275, 0.8545751571655273, 0.898692786693573, 0.9133986830711365, 0.9084967374801636, 0.9101307392120361, 0.906862735748291, 0.9199346303939819, 0.9248365759849548], "loss": [0.6762006878852844, 0.6462843418121338, 0.613506019115448, 0.5299888849258423, 0.48787614703178406, 0.5319410562515259, 0.4212147295475006, 0.36230266094207764, 0.3002249598503113, 0.24698680639266968, 0.24455121159553528, 0.23668785393238068, 0.2292790561914444, 0.21099528670310974, 0.19320465624332428], "val_accuracy": [0.5686274766921997, 0.7254902124404907, 0.7254902124404907, 0.8970588445663452, 0.7450980544090271, 0.8970588445663452, 0.7401960492134094, 0.8872548937797546, 0.906862735748291, 0.9019607901573181, 0.906862735748291, 0.9019607901573181, 0.8970588445663452, 0.9117646813392639, 0.9019607901573181], "val_loss": [0.6300860643386841, 0.6268294453620911, 0.5468148589134216, 0.5026175379753113, 0.5104695558547974, 0.3726978600025177, 0.48309364914894104, 0.32104453444480896, 0.2929213345050812, 0.26452523469924927, 0.24527493119239807, 0.2562170922756195, 0.24040766060352325, 0.23132403194904327, 0.26612570881843567]}, "attention": {"accuracy": [0.5588235259056091, 0.7320261597633362, 0.7761437892913818, 0.8578431606292725, 0.9003267884254456, 0.9248365759849548, 0.9166666865348816, 0.9297385811805725, 0.9346405267715454, 0.9330065250396729, 0.9411764740943909, 0.9330065250396729, 0.9460784196853638, 0.9281045794487, 0.9477124214172363], "loss": [0.681168258190155, 0.6484742760658264, 0.5253401398658752, 0.3527437150478363, 0.28675028681755066, 0.229413703083992, 0.22147591412067413, 0.20139122009277344, 0.18061260879039764, 0.1739499270915985, 0.15445543825626373, 0.17734791338443756, 0.1403077244758606, 0.19456376135349274, 0.15846560895442963], "val_accuracy": [0.7254902124404907, 0.6519607901573181, 0.7549019455909729, 0.8921568393707275, 0.9019607901573181, 0.8872548937797546, 0.8970588445663452, 0.8970588445663452, 0.9166666865348816, 0.936274528503418, 0.8823529481887817, 0.9313725233078003, 0.8774510025978088, 0.9019607901573181, 0.9166666865348816], "val_loss": [0.6324305534362793, 0.6278019547462463, 0.42323535680770874, 0.3008435070514679, 0.2514900267124176, 0.2544199526309967, 0.3175336420536041, 0.21775467693805695, 0.20755834877490997, 0.20229649543762207, 0.2976095676422119, 0.2115568220615387, 0.5475963354110718, 0.22516532242298126, 0.2501786947250366]}};
+        
+        // ACCURACY CHART CONFIG
+        const accCtx = document.getElementById('accChart').getContext('2d');
+        new Chart(accCtx, {
+            type: 'line',
+            data: {
+                labels: epochs,
+                datasets: [
+                    {
+                        label: 'Train Acc (BiLSTM+Attention)',
+                        data: historyData.attention.accuracy,
+                        borderColor: '#A78BFA',
+                        backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Val Acc (BiLSTM+Attention)',
+                        data: historyData.attention.val_accuracy,
+                        borderColor: '#8B5CF6',
+                        borderDash: [5, 5],
+                        borderWidth: 3,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Train Acc (LSTM)',
+                        data: historyData.lstm.accuracy,
+                        borderColor: '#60A5FA',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Val Acc (LSTM)',
+                        data: historyData.lstm.val_accuracy,
+                        borderColor: '#3B82F6',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#c9d1d9' } }
+                },
+                scales: {
+                    x: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } },
+                    y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }
+                }
+            }
+        });
+        
+        // LOSS CHART CONFIG
+        const lossCtx = document.getElementById('lossChart').getContext('2d');
+        new Chart(lossCtx, {
+            type: 'line',
+            data: {
+                labels: epochs,
+                datasets: [
+                    {
+                        label: 'Train Loss (BiLSTM+Attention)',
+                        data: historyData.attention.loss,
+                        borderColor: '#F87171',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Val Loss (BiLSTM+Attention)',
+                        data: historyData.attention.val_loss,
+                        borderColor: '#EF4444',
+                        borderDash: [5, 5],
+                        borderWidth: 3,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Train Loss (LSTM)',
+                        data: historyData.lstm.loss,
+                        borderColor: '#FBBF24',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Val Loss (LSTM)',
+                        data: historyData.lstm.val_loss,
+                        borderColor: '#F59E0B',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#c9d1d9' } }
+                },
+                scales: {
+                    x: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } },
+                    y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }
+                }
+            }
+        });
+
+        // --- NEW: IMPACT CHART CONFIG ---
+        const impactData = [{"api": "OutputDebugStringA", "impact": 2.069303035736084, "count": 1}, {"api": "FindFirstFileExA", "impact": 1.8320168256759644, "count": 2}, {"api": "RegQueryValueExA", "impact": 1.5822330017884572, "count": 3}, {"api": "CreateThread", "impact": 1.1884635884358432, "count": 15}, {"api": "GetTimeZoneInformation", "impact": 0.8973120542388642, "count": 5}, {"api": "GlobalMemoryStatusEx", "impact": 0.8879893468692899, "count": 3}, {"api": "WriteConsoleA", "impact": 0.8720929622650146, "count": 1}, {"api": "GetFileType", "impact": 0.7455020466981556, "count": 7}, {"api": "GetTempPathW", "impact": 0.6602531239089634, "count": 3}, {"api": "NtOpenDirectoryObject", "impact": 0.6565744966889421, "count": 3}, {"api": "NULL_API", "impact": 0.630291223526001, "count": 8}, {"api": "SetFilePointer", "impact": 0.5422047900501639, "count": 4}, {"api": "CreateDirectoryW", "impact": 0.5390712729877123, "count": 4}, {"api": "__exception__", "impact": 0.5369107639915001, "count": 4}, {"api": "NtWriteFile", "impact": 0.47491750635373364, "count": 8}, {"api": "NtAllocateVirtualMemory", "impact": 0.45888349184010624, "count": 40}, {"api": "NtQueryInformationFile", "impact": 0.38325395610172563, "count": 6}, {"api": "GetSystemTimeAsFileTime", "impact": 0.3796835876683179, "count": 21}, {"api": "NtFreeVirtualMemory", "impact": 0.36980653123631974, "count": 19}, {"api": "SetUnhandledExceptionFilter", "impact": 0.3642232676739321, "count": 17}];
+        const impactCtx = document.getElementById('impactChart').getContext('2d');
+        new Chart(impactCtx, {
+            type: 'bar',
+            data: {
+                labels: impactData.map(d => d.api),
+                datasets: [{
+                    label: 'Mức độ ảnh hưởng trung bình (Nghiệm theo LRP)',
+                    data: impactData.map(d => d.impact),
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: '#EF4444',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { 
+                        ticks: { color: '#8b949e' }, 
+                        grid: { color: '#30363d' },
+                        title: { display: true, text: 'Trọng số ảnh hưởng trung bình', color: '#8b949e' }
+                    },
+                    y: { ticks: { color: '#c9d1d9', font: { family: 'monospace' } }, grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
