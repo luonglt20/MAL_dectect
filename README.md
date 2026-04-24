@@ -159,12 +159,12 @@ Input (100 API indices)
 
 ## Kết quả
 
-| Mô hình | Accuracy | F1-Score |
+| Mô hình | Accuracy | F1-Score (Weighted Avg) |
 |---|---|---|
-| LSTM (Baseline) | 99.43% | 93.79% |
-| **BiLSTM + Attention (Đồ án)** | **~98.9%** | **Cải thiện XAI** |
+| LSTM 1 Chiều (Baseline) | 91.7% | 91.7% |
+| **BiLSTM + Attention (Đồ án)** | **93.2%** | **93.2%** |
 
-> BiLSTM không chỉ nhắm tới accuracy tối đa mà ưu tiên **khả năng giải thích** và **phát hiện obfuscated malware** — giá trị cốt lõi của đồ án thạc sĩ.
+> BiLSTM không chỉ cải thiện độ chính xác tổng thể và khả năng phát hiện mã độc (Recall cao hơn), mà còn ưu tiên **khả năng giải thích** — giá trị cốt lõi của đồ án thạc sĩ.
 
 ### Hiệu quả các phương pháp XAI
 
